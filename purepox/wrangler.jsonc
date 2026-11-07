@@ -5,7 +5,6 @@
   "compatibility_date": "2025-06-01",
   "workers_dev": true,
 
-  // Built React site. Only /api/* runs Worker code; the rest is static (SPA).
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application",
@@ -18,5 +17,9 @@
       "database_name": "purepox",
       "database_id": "3d7873f4-7e92-44f5-b424-5293998f132f"
     }
+  ],
+
+  "r2_buckets": [
+    { "binding": "IMAGES", "bucket_name": "purepox" }
   ]
 }
