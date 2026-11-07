@@ -1,25 +1,14 @@
 {
-  // Purepox — Cloudflare Worker (site + API)
   "name": "purepox",
   "main": "worker/index.js",
   "compatibility_date": "2025-06-01",
   "workers_dev": true,
-
-  // The built React site. Only /api/* runs the Worker code; everything else is static (SPA).
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   },
-
-  // 1) PASTE your D1 "Database ID" below (Cloudflare → D1 → purepox → copy the Database ID)
   "d1_databases": [
-    { "binding": "DB", "database_name": Purepox "database_id": "3d7873f4-7e92-44f5-b424-5293998f132f" }
+    { "binding": "DB", "database_name": "purepox", "database_id": "3d7873f4-7e92-44f5-b424-5293998f132f" }
   ]
-
-  // 2) OPTIONAL — product photo uploads. Create an R2 bucket named purepox-images,
-  //    then remove the comment marks on the next 3 lines (and add a comma after the "]" above).
-  // ,"r2_buckets": [
-  //   { "binding": "IMAGES", "bucket_name": "purepox-images" }
-  // ]
 }
