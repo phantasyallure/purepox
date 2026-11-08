@@ -728,3 +728,17 @@ h1, h2, h3 { letter-spacing: -.025em; }
   .sol { padding-top: 28px; }
   .sol-row { align-content: start; }
 }
+
+/* ---- make the options look like clickable buttons ---- */
+.sol-seg { background: none; padding: 0; gap: 10px; }
+.sol-seg button { background: #fff; border: 2px solid #d9d9de; border-radius: 14px; box-shadow: 0 2px 0 rgba(17,17,19,.06), 0 6px 14px -8px rgba(17,17,19,.25); min-height: 52px; padding: 8px 10px; transition: border-color .2s, background .2s, transform .2s, box-shadow .2s; }
+.sol-seg button:hover { background: #fff7f1; border-color: var(--orange); }
+.sol-seg button:active { transform: scale(.97); }
+.sol-seg button.on, .sol-seg button.on:hover { background: var(--orange); border-color: var(--orange); color: #fff; box-shadow: 0 10px 20px -10px rgba(236,107,20,.7); }
+.sol-seg button.on b::before { content: '✓ '; font-weight: 800; }
+.sol-seg button small { opacity: .65; }
+.sol-seg button.on small { opacity: .9; }
+@media (max-width: 900px) {
+  .sol-seg { gap: 8px; }
+  .sol-seg button { min-height: 48px; border-radius: 12px; }
+}
