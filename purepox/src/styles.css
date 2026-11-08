@@ -503,3 +503,17 @@ h1, h2, h3 { letter-spacing: -.025em; }
 .art-card.bucket-bg::before { content: ''; position: absolute; width: 70%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(236,107,20,.45), transparent 68%); }
 .art-card .bucket { position: relative; filter: drop-shadow(0 30px 34px rgba(0,0,0,.55)); }
 .header-in { background: rgba(255,255,255,.94); }
+
+/* ---- fix: selected choice must stay readable ---- */
+.chip.big { color: var(--ink); }
+.chip.big:hover { color: var(--orange); border-color: var(--orange); background: #fff7f1; }
+.chip.big.on, .chip.big.on:hover { background: var(--orange); border-color: var(--orange); color: #fff; box-shadow: 0 12px 24px -10px rgba(236,107,20,.65); }
+.chip.big.on::before { content: '✓'; margin-inline-end: 8px; font-weight: 800; }
+.choices { display: grid; gap: 2px; }
+.choice .chips { gap: 8px; margin-bottom: 8px; }
+
+/* calculator polish */
+.area input::-webkit-outer-spin-button, .area input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.area input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+.result div:nth-child(3) { grid-column: 1 / -1; }
+.product-art { top: 100px; }
