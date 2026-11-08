@@ -716,3 +716,33 @@ h1, h2, h3 { letter-spacing: -.025em; }
   .sol-row { grid-template-columns: 1fr; gap: 8px; padding: 12px 0; }
   .sol-card { padding: 6px 16px 12px; }
 }
+
+/* ---- phone: much tighter "Calculer mon besoin" ---- */
+@media (max-width: 900px) {
+  .sol { padding-top: 14px; }
+  .sol-head { margin-bottom: 10px; }
+  .sol-head h1 { font-size: 1.55rem; }
+  .sol-head .lead { display: none; }
+  .sol-grid { gap: 12px; }
+  .sol-card { padding: 2px 12px 8px; border-radius: 20px; }
+  .sol-row { gap: 4px; padding: 8px 0; }
+  .sol-row .pp-label { font-size: .64rem; letter-spacing: .07em; }
+  .sol-seg { padding: 3px; gap: 3px; border-radius: 12px; }
+  .sol-seg button { min-height: 38px; padding: 4px 8px; border-radius: 10px; }
+  .sol-seg button b { font-size: .84rem; }
+  .sol-seg button small { font-size: .62rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .sol-watch { margin-top: 6px; padding: 4px 10px; font-size: .72rem; }
+  .sol-area input { padding: 8px 48px 8px 14px; font-size: 1.05rem; border-radius: 12px; }
+  [dir='rtl'] .sol-area input { padding: 8px 14px 8px 48px; }
+  .sol-sw { gap: 8px; }
+  .sol-sw button { width: 32px; height: 32px; }
+  .sol-other { margin: 2px 0 0; padding-bottom: 4px; }
+  .sol .pp-sum { padding: 14px; gap: 8px; border-radius: 20px; }
+  .sol .pp-sum h2 { font-size: 1rem; }
+  .sol .sol-line { padding: 10px 12px; }
+  .sol .pp-total { padding: 10px 14px; }
+  .sol .pp-total b { font-size: 1.3rem; }
+  .sol .big-project { padding: 8px 12px; font-size: .78rem; margin: 0; }
+  .sol .pp-actions { display: none; }          /* the sticky bar already has the order button */
+  .sol.pp { padding-bottom: 84px; }
+}
