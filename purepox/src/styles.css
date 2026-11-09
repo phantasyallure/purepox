@@ -829,3 +829,15 @@ html { scroll-padding-top: 90px; }
 .hero h1, .hero p { text-shadow: 0 2px 24px rgba(0,0,0,.7); }
 .hero p { color: #e6e6ea; }
 @media (max-width: 900px) { .hero { padding-top: 120px; } }
+
+/* ---- readability: stat cards + hero text ---- */
+.hero-stats > div { background: rgba(12,12,14,.78); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2); box-shadow: 0 20px 40px -24px rgba(0,0,0,.8); }
+.hero-stats > div:hover { background: rgba(20,20,23,.88); }
+.hero-stats b { color: #ff8a3d; text-shadow: 0 2px 18px rgba(236,107,20,.35); }
+.hero-stats span { color: #f1f1f4; font-size: .95rem; font-weight: 500; text-shadow: none; }
+.hero .kicker { background: rgba(12,12,14,.7); color: #ffc79e; border-color: rgba(255,255,255,.25); }
+.hero .btn.ghost { background: rgba(12,12,14,.55); border-color: rgba(255,255,255,.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.hero::before { background:
+  linear-gradient(90deg, rgba(8,8,10,.94) 0%, rgba(8,8,10,.86) 30%, rgba(8,8,10,.55) 48%, rgba(8,8,10,.08) 72%, rgba(8,8,10,0) 85%),
+  linear-gradient(180deg, rgba(8,8,10,.6) 0%, rgba(8,8,10,0) 24%, rgba(8,8,10,0) 55%, rgba(8,8,10,.75) 80%, rgba(8,8,10,.95) 100%); }
+@media (max-width: 560px) { .hero-stats span { font-size: .78rem; } }
