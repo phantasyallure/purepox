@@ -819,3 +819,13 @@ html { scroll-padding-top: 90px; }
   .hero-text { max-width: none; }
 }
 @media (prefers-reduced-motion: reduce) { .hero-bg { animation: none; } }
+
+/* ---- fix: dark overlay was painted UNDER the photo ---- */
+.hero-bg { z-index: -2; }
+.hero::before { z-index: -1; background:
+  linear-gradient(90deg, rgba(8,8,10,.94) 0%, rgba(8,8,10,.86) 30%, rgba(8,8,10,.55) 48%, rgba(8,8,10,.08) 72%, rgba(8,8,10,0) 85%),
+  linear-gradient(180deg, rgba(8,8,10,.6) 0%, rgba(8,8,10,0) 24%, rgba(8,8,10,0) 62%, rgba(8,8,10,.92) 100%); }
+.hero { padding-top: 170px; }
+.hero h1, .hero p { text-shadow: 0 2px 24px rgba(0,0,0,.7); }
+.hero p { color: #e6e6ea; }
+@media (max-width: 900px) { .hero { padding-top: 120px; } }
