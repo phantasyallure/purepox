@@ -943,3 +943,8 @@ html { scroll-padding-top: 90px; }
 .sol-pick span { font-size: 1.2rem; pointer-events: none; }
 .sol-custom-card > input[type="text"] { flex: 1; min-width: 0; border: 0; background: transparent; padding: 10px 4px; font: inherit; font-size: .95rem; outline: none; }
 .sol-od-badge { display: inline-block; padding: 2px 9px; border-radius: 999px; background: #f1eafe; color: #7c3aed; font-weight: 800; font-size: .72rem; margin-inline-end: 4px; }
+
+/* fix: the pill sits inside .sol-sw, whose generic "button" rule (38px circle) was overriding it */
+.sol-sw button.sol-other-pill { width: auto; height: 40px; padding: 0 16px 0 6px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: flex-start; gap: 8px; white-space: nowrap; transform: none; box-shadow: none; }
+.sol-sw button.sol-other-pill:hover, .sol-sw button.sol-other-pill.on { transform: none; box-shadow: none; }
+.sol-sw button.sol-other-pill.on { box-shadow: 0 0 0 3px rgba(236,107,20,.15); }
