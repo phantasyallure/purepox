@@ -167,17 +167,20 @@ export default function Solution({ settings }) {
                       <i style={{ background: c.hex }} />
                     </button>
                   ))}
-                  <button type="button" className={`sol-sw-other ${custom ? 'on' : ''}`} onClick={() => { setCustom(true); setColorId(null); setNeed(null) }} aria-label={t('custom_color')} title={t('custom_color')}>
-                    <i>+</i>
+                  <button type="button" className={`sol-other-pill ${custom ? 'on' : ''}`} onClick={() => { setCustom(true); setColorId(null); setNeed(null) }} aria-pressed={custom}>
+                    <b>+</b> {t('custom_color')}
                   </button>
                 </div>
                 {custom ? (
                   <div className="sol-custom">
-                    <div className="sol-custom-in">
+                    <div className="sol-custom-card">
+                      <label className="sol-pick" style={{ background: customHex || '#e4e4e8' }} title={t('custom_color')}>
+                        <input type="color" value={customHex || '#cccccc'} onChange={(e) => { setCustomHex(e.target.value); setNeed(null) }} aria-label={t('custom_color')} />
+                        {!customHex && <span>🎨</span>}
+                      </label>
                       <input type="text" maxLength={60} value={customName} placeholder={t('custom_ph')} onChange={(e) => { setCustomName(e.target.value); setNeed(null) }} />
-                      <input type="color" value={customHex || '#cccccc'} onChange={(e) => { setCustomHex(e.target.value); setNeed(null) }} aria-label={t('custom_color')} />
                     </div>
-                    <p className="sol-custom-note">{t('custom_note')}</p>
+                    <p className="sol-custom-note"><span className="sol-od-badge">{t('on_demand')}</span> {t('custom_note')}</p>
                   </div>
                 ) : (
                   <div className="sol-cprice">{color ? unitText(fin, color) : <span className="muted">{finOk ? t('pick_color') : t('custom_color')}</span>}</div>
