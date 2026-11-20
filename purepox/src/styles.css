@@ -1092,7 +1092,7 @@ html { scroll-padding-top: 90px; }
 
 /* ---------- Arabic (RTL): mirror the hero photo + overlay so the text stays on the empty side ---------- */
 @keyframes kenburns-rtl { from { transform: scaleX(-1) scale(1); } to { transform: scaleX(-1) scale(1.08); } }
-[dir="rtl"] .hero-bg { transform: scaleX(-1); animation-name: kenburns-rtl; }
+[dir="rtl"] .hero-bg { transform: scaleX(-1); transform-origin: 50% 50%; background-position: 30% center; animation-name: kenburns-rtl; }
 [dir="rtl"] .hero::before { background:
   linear-gradient(270deg, rgba(8,8,10,.92) 0%, rgba(8,8,10,.74) 32%, rgba(8,8,10,.18) 62%, rgba(8,8,10,0) 80%),
   linear-gradient(180deg, rgba(8,8,10,.55) 0%, rgba(8,8,10,0) 22%, rgba(8,8,10,0) 60%, rgba(8,8,10,.92) 100%); }
