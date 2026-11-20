@@ -1089,3 +1089,14 @@ html { scroll-padding-top: 90px; }
   .nav.open { transform: none; opacity: 1; pointer-events: auto; }
   .nav button { text-align: start; padding: 14px 12px; font-size: 1rem; }
 }
+
+/* ---------- Arabic (RTL): mirror the hero photo + overlay so the text stays on the empty side ---------- */
+@keyframes kenburns-rtl { from { transform: scaleX(-1) scale(1); } to { transform: scaleX(-1) scale(1.08); } }
+[dir="rtl"] .hero-bg { transform: scaleX(-1); animation-name: kenburns-rtl; }
+[dir="rtl"] .hero::before { background:
+  linear-gradient(270deg, rgba(8,8,10,.92) 0%, rgba(8,8,10,.74) 32%, rgba(8,8,10,.18) 62%, rgba(8,8,10,0) 80%),
+  linear-gradient(180deg, rgba(8,8,10,.55) 0%, rgba(8,8,10,0) 22%, rgba(8,8,10,0) 60%, rgba(8,8,10,.92) 100%); }
+@media (max-width: 900px) {
+  [dir="rtl"] .hero-bg { animation: none; }
+  [dir="rtl"] .hero::before { background: linear-gradient(180deg, rgba(8,8,10,.78) 0%, rgba(8,8,10,.62) 45%, rgba(8,8,10,.9) 100%); }
+}
