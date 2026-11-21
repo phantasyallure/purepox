@@ -684,7 +684,7 @@ function CalcAdmin({ notify }) {
           <span className="ad-pact">
             <button type="button" className="ad-link" onClick={() => toggle(d)}>{d.active ? 'Masquer' : 'Afficher'}</button>
             <button type="button" className="ad-link" onClick={() => setEdit({ slot: d.slot })}>Modifier</button>
-            <button type="button" className="ad-link danger" onClick={() => removeCard(d)}>Supprimer</button>
+            <button type="button" className="ad-link danger ad-trash" onClick={() => removeCard(d)} title="Supprimer" aria-label="Supprimer ce produit"><Ico n="trash" size={18} /></button>
           </span>
         </div>
       </div>
