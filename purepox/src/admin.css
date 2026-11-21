@@ -234,7 +234,7 @@
 .ad-vid-row { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
 
 /* ============ v4 — receipts, calculator tab ============ */
-.ad-nav { grid-template-columns: repeat(4, 1fr); }
+.ad-nav { grid-template-columns: repeat(5, 1fr); }
 .ad-btn.wa { background: #25d366; color: #fff; box-shadow: 0 6px 18px rgba(37,211,102,.32); }
 .ad-btn.wa:hover { background: #1ebe5b; }
 .ad-contact-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -314,3 +314,8 @@
 .ad-pfoot { align-items: center; }
 .ad-rhead span.ws { background: var(--gold-grad); color: var(--ink-on-gold); }
 .ad-ws-note { padding: 10px 14px; border-radius: 12px; background: #f8f0dc; border: 1px solid rgba(206,155,58,.45); color: #5c4310; font-size: .88rem; }
+
+/* Marketing tab */
+.ad-pill { margin-inline-start: 8px; font-size: .72rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: #ecebe8; color: var(--muted); vertical-align: middle; }
+.ad-pill.on { background: #e3f4e7; color: #1f7a3a; }
+.ad-err { display: block; margin-top: 6px; color: #b3261e; font-weight: 600; }

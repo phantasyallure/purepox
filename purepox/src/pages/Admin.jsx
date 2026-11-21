@@ -23,6 +23,7 @@ const ICONS = {
   orders: 'M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0',
   calc: 'M5 2h14a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h8',
   products: 'M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',
+  marketing: 'M3 3v18h18M7 14l4-4 3 3 5-6',
   contact: 'M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z',
 }
 
@@ -733,7 +734,7 @@ function ContactForm({ notify }) {
   }
   const save = async (e) => {
     e.preventDefault(); setBusy(true)
-    try { await api('/api/admin/settings', { method: 'PUT', body: s }); notify('Enregistré ✓') }
+    try { const { tiktok_pixel, meta_pixel, ga_id, ...rest } = s; await api('/api/admin/settings', { method: 'PUT', body: rest }); notify('Enregistré ✓') }
     catch { notify("Erreur d'enregistrement") }
     setBusy(false)
   }
@@ -772,6 +773,60 @@ function ContactForm({ notify }) {
   )
 }
 
+/* ---------------- Marketing: pixels + analytics ---------------- */
+const ID_RE = /^[A-Za-z0-9_-]{4,40}$/
+const TRACKERS = [
+  { k: 'tiktok_pixel', icon: '🎵', title: 'TikTok Pixel', label: 'Pixel ID', ph: 'Ex : CABCDE1234567890ABCD',
+    help: "TikTok Ads Manager → Assets → Events → Web Events → votre pixel → copiez le « Pixel ID » (lettres et chiffres)." },
+  { k: 'meta_pixel', icon: '📘', title: 'Facebook Pixel (Meta)', label: 'Pixel ID', ph: 'Ex : 123456789012345',
+    help: "Meta Events Manager → Sources de données → votre pixel → copiez l'ID du pixel (un nombre de 15-16 chiffres)." },
+  { k: 'ga_id', icon: '📊', title: 'Google Analytics', label: 'ID de mesure (GA4)', ph: 'Ex : G-ABC123DEF4',
+    help: "Google Analytics → Admin → Flux de données → votre site web → copiez l'« ID de mesure » qui commence par G-." },
+]
+
+function MarketingForm({ notify }) {
+  const [s, setS] = useState(null)
+  const [busy, setBusy] = useState(false)
+  useEffect(() => {
+    api('/api/admin/settings').then((d) => setS({ tiktok_pixel: d.tiktok_pixel || '', meta_pixel: d.meta_pixel || '', ga_id: d.ga_id || '' })).catch(() => {})
+  }, [])
+  if (!s) return null
+  const bad = (k) => s[k] && !ID_RE.test(s[k].trim())
+  const save = async (e) => {
+    e.preventDefault()
+    if (TRACKERS.some((t) => bad(t.k))) { notify('Un des identifiants est invalide (lettres, chiffres, - et _ seulement).'); return }
+    setBusy(true)
+    try {
+      await api('/api/admin/settings', { method: 'PUT', body: { tiktok_pixel: s.tiktok_pixel.trim(), meta_pixel: s.meta_pixel.trim(), ga_id: s.ga_id.trim() } })
+      notify('Enregistré ✓ (actif sur le site dans ~30 s)')
+    } catch { notify("Erreur d'enregistrement") }
+    setBusy(false)
+  }
+  return (
+    <form onSubmit={save} className="ad-contact">
+      <div className="ad-auto">Collez uniquement l'identifiant : le site installe tout seul le suivi (pas de code à copier). Laissez vide pour désactiver. Le suivi n'est jamais actif dans l'administration.</div>
+      {TRACKERS.map((t) => (
+        <section className="ad-card" key={t.k}>
+          <h3>{t.icon} {t.title} <span className={`ad-pill ${s[t.k] && !bad(t.k) ? 'on' : ''}`}>{s[t.k] && !bad(t.k) ? 'Actif' : 'Désactivé'}</span></h3>
+          <div className="ad-field"><label>{t.label}</label>
+            <input dir="ltr" placeholder={t.ph} value={s[t.k]} autoComplete="off" spellCheck={false} onChange={(e) => setS({ ...s, [t.k]: e.target.value })} />
+            {bad(t.k) && <small className="ad-err">Format invalide : lettres, chiffres, - et _ uniquement.</small>}
+          </div>
+          <div className="ad-auto">{t.help}</div>
+        </section>
+      ))}
+      <section className="ad-card"><h3>🎯 Événements envoyés</h3>
+        <div className="ad-auto">
+          • <b>Page vue</b> à chaque page visitée<br />
+          • <b>Ajout au reçu</b> : AddToCart (Meta, TikTok) · add_to_cart (Analytics)<br />
+          • <b>Demande envoyée</b> : Lead (Meta) · SubmitForm (TikTok) · generate_lead (Analytics), avec le montant en DZD
+        </div>
+      </section>
+      <div className="ad-savebar static"><button className="ad-btn primary block" disabled={busy}>{busy ? 'Enregistrement…' : 'Enregistrer'}</button></div>
+    </form>
+  )
+}
+
 /* ---------------- Shell ---------------- */
 export default function Admin() {
   const [authed, setAuthed] = useState(undefined) // undefined = checking, false = login, true = in, 'noapi' = no backend
@@ -802,7 +857,7 @@ export default function Admin() {
   if (authed === undefined) return <div className="ad-login"><p>…</p></div>
   if (!authed) return <Login onDone={() => setAuthed(true)} />
 
-  const tabs = [['orders', 'Commandes', ICONS.orders], ['calc', 'Calculateur', ICONS.calc], ['products', 'Produits', ICONS.products], ['contact', 'Contact', ICONS.contact]]
+  const tabs = [['orders', 'Commandes', ICONS.orders], ['calc', 'Calculateur', ICONS.calc], ['products', 'Produits', ICONS.products], ['marketing', 'Marketing', ICONS.marketing], ['contact', 'Contact', ICONS.contact]]
 
   return (
     <div className="ad">
@@ -817,10 +872,11 @@ export default function Admin() {
       </header>
 
       <main className="ad-main">
-        <div className="ad-head"><div><h1>{tabs.find((t) => t[0] === tab)[1]}</h1><p>{{ orders: 'Reçus de vos clients : appelez, écrivez sur WhatsApp, suivez le statut', calc: 'Les produits de la page « Calculer mon besoin » : prix, couleurs et photos du reçu', products: 'Produits simples : photo, description, couleurs et prix', contact: 'Coordonnées et catalogues affichés sur le site' }[tab]}</p></div></div>
+        <div className="ad-head"><div><h1>{tabs.find((t) => t[0] === tab)[1]}</h1><p>{{ orders: 'Reçus de vos clients : appelez, écrivez sur WhatsApp, suivez le statut', calc: 'Les produits de la page « Calculer mon besoin » : prix, couleurs et photos du reçu', products: 'Produits simples : photo, description, couleurs et prix', marketing: 'TikTok Pixel, Facebook Pixel et Google Analytics : mesurez vos visites et vos publicités', contact: 'Coordonnées et catalogues affichés sur le site' }[tab]}</p></div></div>
         {tab === 'orders' && <Orders onCount={setCount} notify={notify} />}
         {tab === 'calc' && <CalcAdmin notify={notify} />}
         {tab === 'products' && <Products notify={notify} />}
+        {tab === 'marketing' && <MarketingForm notify={notify} />}
         {tab === 'contact' && <ContactForm notify={notify} />}
       </main>
 

@@ -64,7 +64,10 @@ CREATE TABLE IF NOT EXISTS settings (
   catalog_concrete TEXT DEFAULT '',   -- preparation catalog (PDF uploaded to R2, or a link)
   catalog_smooth TEXT DEFAULT '',
   catalog_roller TEXT DEFAULT '',     -- application catalog: roller (< 1 mm), PDF uploaded to R2, or a link
-  catalog_squeegee TEXT DEFAULT ''    -- application catalog: squeegee (> 1 mm)
+  catalog_squeegee TEXT DEFAULT '',   -- application catalog: squeegee (> 1 mm)
+  tiktok_pixel TEXT DEFAULT '',       -- TikTok Pixel ID
+  meta_pixel TEXT DEFAULT '',         -- Facebook / Meta Pixel ID
+  ga_id TEXT DEFAULT ''               -- Google Analytics 4 measurement ID (G-XXXXXXXXXX)
 );
 INSERT OR IGNORE INTO settings (id) VALUES (1);
 

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useMemo } from 'react'
+import { trackAdd } from './track'
 
 const Ctx = createContext(null)
 
@@ -11,7 +12,7 @@ export function CartProvider({ children }) {
       items,
       open,
       setOpen,
-      add: (item) => setItems((l) => [...l, { ...item, key: crypto.randomUUID?.() || String(Date.now() + Math.random()) }]),
+      add: (item) => { trackAdd(item?.total); setItems((l) => [...l, { ...item, key: crypto.randomUUID?.() || String(Date.now() + Math.random()) }]) },
       remove: (key) => setItems((l) => l.filter((i) => i.key !== key)),
       clear: () => setItems([]),
       total: items.reduce((s, i) => s + i.total, 0),

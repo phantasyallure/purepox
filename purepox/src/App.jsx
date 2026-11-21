@@ -9,6 +9,7 @@ import Product from './pages/Product'
 import Solution from './pages/Solution'
 import Admin from './pages/Admin'
 import { fetchSettings } from './lib/data'
+import { initTracking, trackPage } from './lib/track'
 
 export default function App() {
   const [settings, setSettings] = useState(null)
@@ -16,6 +17,13 @@ export default function App() {
   const isAdmin = pathname.startsWith('/admin')
 
   useEffect(() => { fetchSettings().then(setSettings).catch(() => setSettings({})) }, [])
+
+  // pixels + analytics: never on the admin, one page view per route
+  useEffect(() => {
+    if (isAdmin || !settings) return
+    initTracking(settings)
+    trackPage()
+  }, [settings, pathname, isAdmin])
 
   return (
     <>

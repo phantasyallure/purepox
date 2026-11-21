@@ -3,6 +3,7 @@ import { useLang } from '../lib/i18n'
 import { useCart } from '../lib/cart'
 import { submitOrder } from '../lib/data'
 import { money, packsText } from '../lib/calc'
+import { trackOrder } from '../lib/track'
 
 let geoCache = null
 const loadGeo = () => (geoCache ? Promise.resolve(geoCache) : import('../lib/algeria.json').then((m) => (geoCache = m.default || m)))
@@ -92,6 +93,7 @@ export default function OrderModal() {
         // the server recomputes quantities and prices from the database
         items: items.map((i) => (i.kind === 'calc' ? { kind: 'calc', ...i.answers } : { kind: 'catalog', product_id: i.productId, color_id: i.colorId, qty: i.qty })),
       })
+      trackOrder(snapshot.total)
       setReceipt({ ...snapshot, ref: res?.ref, name: name.trim(), where: `${nm(wilaya[1], wilaya[2])} · ${commune}` })
       clear(); setName(''); setPhone(''); setWcode(''); setCommune(''); setState('done')
     } catch (err) {
