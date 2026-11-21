@@ -19,6 +19,8 @@ const SVC_ICONS = [
   ic(<><path d="M14 4 20 10 10 20 4 14z" /><path d="m4 14-1 6 6-1" /><path d="m12 6 6 6" /></>),
 ]
 
+const PAGE = 8 // products shown at first, and added by each click on « Voir plus »
+
 const hasRange = (p) => new Set((p.colors || []).map((c) => Number(c.price ?? p.base_price)).filter(Boolean)).size > 1
 
 function minPrice(p) {
@@ -29,6 +31,7 @@ function minPrice(p) {
 export default function Home({ settings }) {
   const { t, pick } = useLang()
   const [products, setProducts] = useState(null)
+  const [shown, setShown] = useState(PAGE)
 
   useEffect(() => {
     fetchCatalogue().then(setProducts).catch(() => setProducts([]))
@@ -93,8 +96,8 @@ export default function Home({ settings }) {
               <p className="count">{products.length} {t('f_count')}</p>
               {products.length > 0 && (
                 <div className="grid">
-                  {products.map((p, i) => (
-                    <div className="grid-in" key={p.id} style={{ animationDelay: `${i * 60}ms` }}>
+                  {products.slice(0, shown).map((p, i) => (
+                    <div className="grid-in" key={p.id} style={{ animationDelay: `${(i % PAGE) * 60}ms` }}>
                       <Link to={`/produit/${p.id}`} className="card">
                         <div className={`card-art ${p.image_url ? 'photo' : ''}`}>
                           <Photo src={p.image_url} alt={pick(p, 'name')} fallback={<Bucket hex={p.colors?.[0]?.hex || '#CE9B3A'} />} />
@@ -116,6 +119,13 @@ export default function Home({ settings }) {
                       </Link>
                     </div>
                   ))}
+                </div>
+              )}
+              {products.length > shown && (
+                <div className="more-wrap">
+                  <button type="button" className="btn ghost more-btn" onClick={() => setShown((n) => n + PAGE)}>
+                    {t('load_more')} <span className="more-n">({products.length - shown})</span>
+                  </button>
                 </div>
               )}
             </>

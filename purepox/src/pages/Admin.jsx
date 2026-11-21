@@ -299,7 +299,9 @@ const MAX_COLORS = 12
 function ProductEditor({ initial, nextSort, onClose, onSaved }) {
   const [p, setP] = useState({
     ...blank, ...initial,
-    name: initial?.name_fr || initial?.name_ar || '',
+    name_fr: initial?.name_fr || '',
+    // an Arabic name that is only a copy of the French one (old automatic fallback) is shown empty
+    name_ar: /[\u0600-\u06FF]/.test(initial?.name_ar || '') ? initial.name_ar : '',
     desc: initial?.desc_fr || initial?.desc_ar || '',
     price: initial?.base_price > 0 ? initial.base_price : '',
     colors: (initial?.colors || []).map((c) => ({ ...c })),
@@ -315,19 +317,18 @@ function ProductEditor({ initial, nextSort, onClose, onSaved }) {
   const save = async (e) => {
     e.preventDefault()
     const fail = (field, ref, msg) => { setBad(field); setErr(msg); ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); ref.current?.focus?.() }
-    if (!p.name.trim()) return fail('name', nameRef, 'Écrivez d\'abord le nom du produit.')
+    if (!p.name_fr.trim() && !p.name_ar.trim()) return fail('name', nameRef, 'Écrivez le nom du produit (en français et/ou en arabe).')
     if (!(Number(p.price) > 0)) return fail('price', priceRef, 'Entrez le prix du produit.')
     setBusy(true); setErr(''); setBad('')
     try {
-      const saved = await api('/api/admin/products', {
+      await api('/api/admin/products', {
         method: 'POST',
         body: {
-          id: p.id, name: p.name, price: p.price, desc: p.desc, image_url: p.image_url || null,
+          id: p.id, name_fr: p.name_fr, name_ar: p.name_ar, price: p.price, desc: p.desc, image_url: p.image_url || null,
           sort_order: p.sort_order ?? nextSort, active: p.active,
           colors: p.colors.map((c) => ({ id: c.id, name_fr: c.name_fr, name_ar: c.name_ar, hex: c.hex, price: c.price })),
         },
       })
-      if (saved && saved.translated === false) alert('Produit enregistré. La traduction automatique FR/AR est indisponible pour le moment : elle sera refaite toute seule dans quelques minutes.')
       onSaved()
     } catch (e2) {
       setErr(e2.status === 401 ? 'Session expirée. Reconnectez-vous.' : `Erreur d'enregistrement (${e2.message}). Réessayez.`)
@@ -347,15 +348,20 @@ function ProductEditor({ initial, nextSort, onClose, onSaved }) {
           <PhotoField value={p.image_url} onChange={(v) => set('image_url', v)} onBusy={setUp} />
           <section className="ad-card" style={{ display: 'grid', gap: 16 }}>
             <div className="ad-field">
-              <label>Nom du produit</label>
-              <input ref={nameRef} className={`ad-big ${bad === 'name' ? 'bad' : ''}`} placeholder="Ex : Pinceau 50 mm" value={p.name} onChange={(e) => { set('name', e.target.value); setBad('') }} />
+              <label>Nom en français</label>
+              <input ref={nameRef} className={`ad-big ${bad === 'name' ? 'bad' : ''}`} placeholder="Ex : Pinceau 50 mm" value={p.name_fr} onChange={(e) => { set('name_fr', e.target.value); setBad('') }} />
+            </div>
+            <div className="ad-field">
+              <label>الاسم بالعربية</label>
+              <input className={`ad-big ${bad === 'name' ? 'bad' : ''}`} dir="rtl" lang="ar" placeholder="مثال: فرشاة 50 ملم" value={p.name_ar} onChange={(e) => { set('name_ar', e.target.value); setBad('') }} />
+              <small style={{ color: 'var(--gray, #777)' }}>Écrivez les deux noms vous-même. Si un seul est rempli, le site l'affiche dans les deux langues.</small>
             </div>
             <div className="ad-field">
               <label>Prix</label>
               <div className="ad-suffix"><input ref={priceRef} className={`ad-big ${bad === 'price' ? 'bad' : ''}`} type="number" step="any" min="0" inputMode="decimal" placeholder="Ex : 3500" value={p.price} onChange={(e) => { set('price', e.target.value); setBad('') }} /><span>DA</span></div>
             </div>
             <div className="ad-field">
-              <label>Description <small style={{ fontWeight: 400 }}>(optionnel)</small></label>
+              <label>Description <small style={{ fontWeight: 400 }}>(optionnel — affichée telle quelle, en français ou en arabe)</small></label>
               <textarea rows="3" placeholder="Quelques mots sur le produit" value={p.desc} onChange={(e) => set('desc', e.target.value)} />
             </div>
           </section>

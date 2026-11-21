@@ -1175,3 +1175,8 @@ html { scroll-padding-top: 90px; }
 /* small thumbnails (solution page, receipt): never crop the bucket */
 .sol-thumb, .rc-img, .ad-rl img, .ad-pimg img { object-fit: contain; background: #fff; }
 .ad-drop img { object-fit: contain; background: #f4f4f6; }
+
+/* "load more": products are shown 8 at a time */
+.more-wrap { display: flex; justify-content: center; margin-top: 34px; }
+.more-btn { min-width: 240px; justify-content: center; }
+.more-n { opacity: .6; font-weight: 500; margin-inline-start: 4px; }

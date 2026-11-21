@@ -1,5 +1,4 @@
 import { json, bad, clean, num, group, purgePublic } from '../../_lib/util.js'
-import { bilingual, pairState } from '../../_lib/translate.js'
 
 const HEX = /^#[0-9a-fA-F]{6}$/
 const pickOf = (v, allowed, fallback) => (allowed.includes(v) ? v : fallback)
@@ -18,8 +17,12 @@ export async function onRequestPost({ request, env }) {
   let b
   try { b = await request.json() } catch { return bad('invalid') }
 
-  const nameIn = clean(b.name ?? b.name_fr, 120)
-  const descIn = clean(b.desc ?? b.desc_fr, 2000)
+  // Names are typed by hand in French and in Arabic (no automatic translation). One of them is enough:
+  // the site shows the other one when a language is missing. The description is one free text, shown as typed in both languages.
+  const nameFr = clean(b.name_fr ?? b.name, 120)
+  const nameAr = clean(b.name_ar, 120)
+  const nameIn = nameFr || nameAr
+  const descIn = clean(b.desc ?? b.desc_fr ?? b.desc_ar, 2000)
   const bucket = num(b.bucket_kg) ?? 20            // not used any more by normal products (kept for old rows)
   const cov = num(b.coverage_m2_per_kg) ?? 1
   if (!nameIn || !(bucket > 0) || !(cov > 0)) return bad('invalid_product')
@@ -50,16 +53,8 @@ export async function onRequestPost({ request, env }) {
 
   const db = env.DB
 
-  // automatic translation (skipped when the text did not change)
-  let prev = null
-  try { prev = await db.prepare('SELECT name_fr,name_ar,desc_fr,desc_ar FROM products WHERE id = ?').bind(id).first() } catch { /* new product */ }
-  const pair = async (text, f, a) => {
-    if (!text) return { fr: '', ar: '' }
-    // unchanged text with a complete FR+AR pair: keep it. Otherwise (new text, or an earlier translation that failed) translate again.
-    if (prev && prev[f] && prev[a] && (text === prev[f] || text === prev[a]) && pairState(prev[f], prev[a]).done) return { fr: prev[f], ar: prev[a], ok: true }
-    return bilingual(env, text)
-  }
-  const [name, desc] = await Promise.all([pair(nameIn, 'name_fr', 'name_ar'), pair(descIn, 'desc_fr', 'desc_ar')])
+  const name = { fr: nameFr || nameAr, ar: nameAr }
+  const desc = { fr: descIn, ar: descIn }
 
   const stmts = [
     db.prepare(
@@ -102,5 +97,5 @@ export async function onRequestPost({ request, env }) {
     return bad('server_error', 500)
   }
   await purgePublic(request)
-  return json({ ok: true, id, translated: name.ok !== false && desc.ok !== false })
+  return json({ ok: true, id })
 }

@@ -119,7 +119,6 @@ const RETRY_AFTER_MS = 6 * 3600 * 1000
 const MAX_PER_RUN = 6
 
 const TARGETS = [
-  { table: 'products', key: 'id', fields: [['name_fr', 'name_ar'], ['desc_fr', 'desc_ar']] },
   { table: 'calc_products', key: 'slot', fields: [['name_fr', 'name_ar']] },
 ]
 
