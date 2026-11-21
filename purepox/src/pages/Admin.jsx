@@ -645,6 +645,12 @@ function CalcAdmin({ notify }) {
     catch { notify('Action impossible. Réessayez.') }
   }
 
+  const removeCard = async (d) => {
+    if (!window.confirm(`Supprimer « ${d.name_fr} » du calculateur ?\n\nSes couleurs et ses prix seront supprimés aussi. Cette action est définitive.`)) return
+    try { await api('/api/admin/calc', { method: 'DELETE', body: { slot: d.slot } }); notify('Produit supprimé'); load() }
+    catch { notify('Suppression impossible. Réessayez.') }
+  }
+
   // status = why a product is (not) shown on the site
   const statusOf = (d) => {
     if (!d.active) return { label: 'Masqué', color: '#8b8b93', why: 'Ce produit n\'est pas affiché sur le site. Cliquez sur « Afficher » pour le remettre.' }
@@ -678,6 +684,7 @@ function CalcAdmin({ notify }) {
           <span className="ad-pact">
             <button type="button" className="ad-link" onClick={() => toggle(d)}>{d.active ? 'Masquer' : 'Afficher'}</button>
             <button type="button" className="ad-link" onClick={() => setEdit({ slot: d.slot })}>Modifier</button>
+            <button type="button" className="ad-link danger" onClick={() => removeCard(d)}>Supprimer</button>
           </span>
         </div>
       </div>
