@@ -403,3 +403,8 @@
   .an-tile > b { font-size: 1.3rem; }
   .an-delta em { display: none; }
 }
+
+/* calculator card: delete = trash icon only */
+.ad-pact { align-items: center; }
+.ad-pact .ad-trash { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border-radius: 10px; flex: none; }
+.ad-pact .ad-trash:hover { background: rgba(185, 28, 28, .1); }
