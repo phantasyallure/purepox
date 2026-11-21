@@ -1,9 +1,9 @@
 import { json, bad, clean, purgePublic } from '../../_lib/util.js'
-import { bilingual } from '../../_lib/translate.js'
+import { bilingual, pairState } from '../../_lib/translate.js'
 
 const PLAIN = ['phone', 'phone2', 'email', 'whatsapp', 'facebook', 'instagram', 'catalog_roller', 'catalog_squeegee']
 // tracking IDs are injected into <script> tags on the public site: letters, digits, "-" and "_" only
-const TRACKING = ['tiktok_pixel', 'meta_pixel', 'ga_id']
+const TRACKING = ['tiktok_pixel', 'meta_pixel']
 const ID_RE = /^[A-Za-z0-9_-]{4,40}$/
 
 export async function onRequestGet({ env }) {
@@ -21,7 +21,7 @@ export async function onRequestPut({ request, env }) {
 
   const pair = async (text, f, a) => {
     if (!text) return { fr: '', ar: '' }
-    if (prev[f] && prev[a] && (text === prev[f] || text === prev[a])) return { fr: prev[f], ar: prev[a] }
+    if (prev[f] && prev[a] && (text === prev[f] || text === prev[a]) && pairState(prev[f], prev[a]).done) return { fr: prev[f], ar: prev[a] }
     return bilingual(env, text)
   }
 

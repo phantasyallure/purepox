@@ -2,6 +2,7 @@
 // Everything else (the React site, /admin, /produit/...) is served from ./dist by the assets binding.
 import * as pub from '../functions/api/public.js'
 import * as orders from '../functions/api/orders.js'
+import * as track from '../functions/api/track.js'
 import * as img from '../functions/api/img/[key].js'
 import * as login from '../functions/api/admin/login.js'
 import * as logout from '../functions/api/admin/logout.js'
@@ -12,6 +13,7 @@ import * as aProducts from '../functions/api/admin/products.js'
 import * as aProduct from '../functions/api/admin/products/[id].js'
 import * as aCalc from '../functions/api/admin/calc.js'
 import * as aSettings from '../functions/api/admin/settings.js'
+import * as aAnalytics from '../functions/api/admin/analytics.js'
 import * as upload from '../functions/api/admin/upload.js'
 import { isAuthed } from '../functions/_lib/auth.js'
 import { json } from '../functions/_lib/util.js'
@@ -31,6 +33,8 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS calc_colors (id TEXT PRIMARY KEY, slot TEXT NOT NULL, name_fr TEXT NOT NULL, name_ar TEXT NOT NULL DEFAULT '', hex TEXT NOT NULL DEFAULT '#cccccc', price REAL, price_small REAL, price_wholesale REAL, active INTEGER NOT NULL DEFAULT 1, sort_order INTEGER NOT NULL DEFAULT 0)`,
   `CREATE INDEX IF NOT EXISTS idx_calc_colors_slot ON calc_colors(slot)`,
   `CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)`,
+  `CREATE TABLE IF NOT EXISTS visits (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')), vid TEXT NOT NULL, path TEXT NOT NULL, ref TEXT DEFAULT '', device TEXT DEFAULT '')`,
+  `CREATE INDEX IF NOT EXISTS idx_visits_ts ON visits(ts)`,
 ]
 // Columns added later: ALTER TABLE for databases created before (errors "duplicate column" are ignored)
 const MIGRATIONS = [
@@ -46,7 +50,6 @@ const MIGRATIONS = [
   `ALTER TABLE settings ADD COLUMN catalog_squeegee TEXT DEFAULT ''`,
   `ALTER TABLE settings ADD COLUMN tiktok_pixel TEXT DEFAULT ''`,
   `ALTER TABLE settings ADD COLUMN meta_pixel TEXT DEFAULT ''`,
-  `ALTER TABLE settings ADD COLUMN ga_id TEXT DEFAULT ''`,
   `ALTER TABLE orders ADD COLUMN wilaya TEXT DEFAULT ''`,
   `ALTER TABLE orders ADD COLUMN commune TEXT DEFAULT ''`,
   `ALTER TABLE orders ADD COLUMN meta TEXT DEFAULT ''`,
@@ -79,6 +82,7 @@ function ensureSchema(env) {
 const routes = [
   [/^\/api\/public$/, pub],
   [/^\/api\/orders$/, orders],
+  [/^\/api\/track$/, track],
   [/^\/api\/img\/([^/]+)$/, img, ['key']],
   [/^\/api\/admin\/login$/, login],
   [/^\/api\/admin\/logout$/, logout],
@@ -89,6 +93,7 @@ const routes = [
   [/^\/api\/admin\/products\/([^/]+)$/, aProduct, ['id']],
   [/^\/api\/admin\/calc$/, aCalc],
   [/^\/api\/admin\/settings$/, aSettings],
+  [/^\/api\/admin\/analytics$/, aAnalytics],
   [/^\/api\/admin\/upload$/, upload],
 ]
 

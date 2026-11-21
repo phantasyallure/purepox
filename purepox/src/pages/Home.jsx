@@ -7,6 +7,7 @@ import { fetchCatalogue } from '../lib/data'
 import { money } from '../lib/calc'
 import Reveal from '../components/Reveal'
 import Bucket from '../components/Bucket'
+import Photo from '../components/Photo'
 import { PhoneIcon, MailIcon, PinIcon, ClockIcon, InstagramIcon, FacebookIcon } from '../components/Icons'
 
 const ic = (d) => <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
@@ -96,16 +97,14 @@ export default function Home({ settings }) {
                     <div className="grid-in" key={p.id} style={{ animationDelay: `${i * 60}ms` }}>
                       <Link to={`/produit/${p.id}`} className="card">
                         <div className={`card-art ${p.image_url ? 'photo' : ''}`}>
-                          {p.image_url
-                            ? <img src={p.image_url} alt={pick(p, 'name')} loading="lazy" />
-                            : <Bucket hex={p.colors?.[0]?.hex || '#CE9B3A'} />}
+                          <Photo src={p.image_url} alt={pick(p, 'name')} fallback={<Bucket hex={p.colors?.[0]?.hex || '#CE9B3A'} />} />
                           <div className="swatches">
                             {(p.colors || []).slice(0, 7).map((c) => <i key={c.id} style={{ background: c.hex }} />)}
                           </div>
                         </div>
                         <div className="card-body">
                           <h3>{pick(p, 'name')}</h3>
-                          <p>{pick(p, 'desc')}</p>
+                          {pick(p, 'desc') && <p className="card-desc">{pick(p, 'desc')}</p>}
                           <div className="card-foot">
                             <div>
                               {hasRange(p) && <small>{t('from')}</small>}

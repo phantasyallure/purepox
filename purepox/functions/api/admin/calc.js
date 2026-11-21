@@ -1,5 +1,5 @@
 import { json, bad, clean, num, purgePublic } from '../../_lib/util.js'
-import { bilingual } from '../../_lib/translate.js'
+import { bilingual, pairState } from '../../_lib/translate.js'
 
 const HEX = /^#[0-9a-fA-F]{6}$/
 const MAX_COLORS = 24
@@ -86,7 +86,7 @@ export async function onRequestPost({ request, env }) {
   // name: written once (French or Arabic), the other language is automatic
   const nameIn = clean(b.name ?? b.name_fr, 120)
   if (!nameIn) return bad('invalid_name')
-  const name = existing && (nameIn === existing.name_fr || nameIn === existing.name_ar) ? { fr: existing.name_fr, ar: existing.name_ar } : await bilingual(env, nameIn)
+  const name = existing && (nameIn === existing.name_fr || nameIn === existing.name_ar) && pairState(existing.name_fr, existing.name_ar).done ? { fr: existing.name_fr, ar: existing.name_ar } : await bilingual(env, nameIn)
 
   const maxSort = existing ? existing.sort_order : ((await env.DB.prepare('SELECT COALESCE(MAX(sort_order), 0) AS m FROM calc_products WHERE role = ? AND sort_order < 90').bind(role).first())?.m || 0) + 1
   const sort = num(b.sort_order) ?? maxSort

@@ -174,7 +174,13 @@ export function LangProvider({ children }) {
   }, [lang])
   const t = useCallback((k) => dict[lang][k] ?? k, [lang])
   // pick a localized field: pick(obj,'name') -> name_fr / name_ar (fallback to fr)
-  const pick = useCallback((o, f) => (o ? (lang === 'ar' && o[`${f}_ar`]) || o[`${f}_fr`] || '' : ''), [lang])
+  // Falls back to the other language when the chosen one is empty (e.g. translation still pending), so nothing is ever blank.
+  const pick = useCallback((o, f) => {
+    if (!o) return ''
+    const fr = o[`${f}_fr`], ar = o[`${f}_ar`]
+    const v = lang === 'ar' ? ar || fr : fr || ar
+    return typeof v === 'string' ? v : ''
+  }, [lang])
   return <Ctx.Provider value={{ lang, setLang, t, pick }}>{children}</Ctx.Provider>
 }
 

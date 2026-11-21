@@ -5,6 +5,8 @@ import { calcMix, effPrice, money, packsText } from '../lib/calc'
 import { colorName, PRESETS } from '../lib/colors'
 import { compressImage, kb } from '../lib/image'
 import { waDigits } from '../lib/whatsapp'
+import { Ico } from '../lib/ico'
+import Stats from './Stats'
 import '../admin.css'
 
 const num = (v) => (v === '' || v === null || v === undefined ? null : Number(v))
@@ -23,7 +25,8 @@ const ICONS = {
   orders: 'M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0',
   calc: 'M5 2h14a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h8',
   products: 'M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',
-  marketing: 'M3 3v18h18M7 14l4-4 3 3 5-6',
+  marketing: 'M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13',
+  stats: 'M3 3v18h18M7 14l4-4 3 3 5-6',
   contact: 'M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z',
 }
 
@@ -92,11 +95,11 @@ function Receipt({ o }) {
             </div>
           )}
           <ul className="ad-rlines">{g.items.map((i, j) => <RLine key={j} i={i} />)}</ul>
-          {g.calc && <div className="ad-rfacts"><span>🖌️ Outil : <b>{TOOL[g.calc.tool]}</b></span>{g.calc.layers && <span>🧱 <b>{g.calc.layers} couches</b></span>}{g.calc.catalog && <a href={g.calc.catalog} target="_blank" rel="noreferrer">📄 Catalogue</a>}</div>}
+          {g.calc && <div className="ad-rfacts"><span><Ico n="brush" /> Outil : <b>{TOOL[g.calc.tool]}</b></span>{g.calc.layers && <span><Ico n="layers" /> <b>{g.calc.layers} couches</b></span>}{g.calc.catalog && <a href={g.calc.catalog} target="_blank" rel="noreferrer"><Ico n="file" /> Catalogue</a>}</div>}
         </div>
       ))}
       {loose.length > 0 && <ul className="ad-rlines">{loose.map((i, j) => <RLine key={j} i={i} />)}</ul>}
-      {(o.items || []).some((i) => i.price_tier === 'wholesale') && <div className="ad-ws-note">🏷️ <b>Prix de gros</b> appliqué (surface ≥ 200 m²) — indiqué sur le reçu du client.</div>}
+      {(o.items || []).some((i) => i.price_tier === 'wholesale') && <div className="ad-ws-note"><Ico n="tag" /> <b>Prix de gros</b> appliqué (surface ≥ 200 m²) — indiqué sur le reçu du client.</div>}
       <div className="ad-rtotal"><span>Total</span><b>{money(o.total)} DA</b></div>
     </div>
   )
@@ -147,7 +150,7 @@ function Orders({ onCount, notify }) {
         <button className={filter === 'all' ? 'on' : ''} onClick={() => setFilter('all')}>Toutes ({orders.length})</button>
       </div>
 
-      {shown.length === 0 && <div className="ad-empty"><b>📭</b>{filter === 'new' ? 'Aucune nouvelle commande.' : 'Aucune commande pour le moment.'}</div>}
+      {shown.length === 0 && <div className="ad-empty"><b><Ico n="inbox" size={36} /></b>{filter === 'new' ? 'Aucune nouvelle commande.' : 'Aucune commande pour le moment.'}</div>}
 
       {shown.map((o) => {
         const st = STATUS[o.status] || STATUS.new
@@ -165,17 +168,17 @@ function Orders({ onCount, notify }) {
               <div className="ad-order-right">
                 <b>{money(o.total)} DA</b>
                 <span className="ad-tag" style={{ '--c': st.color }}>{st.label}</span>
-                {(o.items || []).some((i) => i.on_demand) && <span className="ad-tag" style={{ '--c': '#7c3aed' }}>🎨 Couleur à confirmer</span>}
+                {(o.items || []).some((i) => i.on_demand) && <span className="ad-tag" style={{ '--c': '#7c3aed' }}><Ico n="palette" /> Couleur à confirmer</span>}
               </div>
             </button>
 
             {isOpen && (
               <div className="ad-order-body">
                 <div className="ad-contact-row">
-                  <a className="ad-btn primary" href={`tel:${o.phone}`} dir="ltr">📞 Appeler {o.phone}</a>
-                  <a className="ad-btn wa" href={wa} target="_blank" rel="noreferrer">💬 WhatsApp</a>
+                  <a className="ad-btn primary" href={`tel:${o.phone}`} dir="ltr"><Ico n="phone" /> Appeler {o.phone}</a>
+                  <a className="ad-btn wa" href={wa} target="_blank" rel="noreferrer"><Ico n="msg" /> WhatsApp</a>
                 </div>
-                <div className="ad-where"><span>📍 Livraison</span><b>{place || '—'}</b><span className="ad-ref">Réf. {o.ref}</span></div>
+                <div className="ad-where"><span><Ico n="pin" /> Livraison</span><b>{place || '—'}</b><span className="ad-ref">Réf. {o.ref}</span></div>
                 <Receipt o={o} />
                 <div className="ad-label">Statut</div>
                 <div className="ad-pills wrap">
@@ -223,11 +226,11 @@ function PhotoField({ value, onChange, onBusy, hint }) {
   return (
     <>
       <label className={`ad-drop ${value ? 'has' : ''}`}>
-        {value ? <img src={value} alt="" /> : <span className="ad-drop-in"><b>📷</b>{up ? 'Envoi…' : 'Ajouter une photo'}<small>{hint || 'optionnel'}</small></span>}
+        {value ? <img src={value} alt="" /> : <span className="ad-drop-in"><b><Ico n="camera" size={28} /></b>{up ? 'Envoi…' : 'Ajouter une photo'}<small>{hint || 'optionnel'}</small></span>}
         {value && <span className="ad-drop-chg">{up ? 'Envoi…' : 'Changer la photo'}</span>}
         <input type="file" accept="image/*" hidden onChange={(e) => upload(e.target.files?.[0])} />
       </label>
-      {info && <div className="ad-auto ok">✅ {info}</div>}
+      {info && <div className="ad-auto ok"><Ico n="checkCircle" /> {info}</div>}
       {err && <div className="ad-error">{err}</div>}
       {value && <button type="button" className="ad-link danger" onClick={() => { onChange(''); setInfo('') }}>Retirer la photo</button>}
     </>
@@ -284,7 +287,7 @@ function ColorsEditor({ colors, onChange, max, advanced, bad, bucketKg, smallKg,
           ? <div className="ad-auto">Maximum {max} couleurs.</div>
           : <button type="button" className="ad-btn ghost block" onClick={() => setPicking(true)}>+ Ajouter une couleur</button>
       )}
-      {colors.length > 0 && <div className="ad-auto">🎨 Le nom de la couleur est trouvé automatiquement.</div>}
+      {colors.length > 0 && <div className="ad-auto"><Ico n="palette" /> Le nom de la couleur est trouvé automatiquement.</div>}
     </>
   )
 }
@@ -312,11 +315,11 @@ function ProductEditor({ initial, nextSort, onClose, onSaved }) {
   const save = async (e) => {
     e.preventDefault()
     const fail = (field, ref, msg) => { setBad(field); setErr(msg); ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); ref.current?.focus?.() }
-    if (!p.name.trim()) return fail('name', nameRef, '👆 Écrivez d\'abord le nom du produit.')
-    if (!(Number(p.price) > 0)) return fail('price', priceRef, '👆 Entrez le prix du produit.')
+    if (!p.name.trim()) return fail('name', nameRef, 'Écrivez d\'abord le nom du produit.')
+    if (!(Number(p.price) > 0)) return fail('price', priceRef, 'Entrez le prix du produit.')
     setBusy(true); setErr(''); setBad('')
     try {
-      await api('/api/admin/products', {
+      const saved = await api('/api/admin/products', {
         method: 'POST',
         body: {
           id: p.id, name: p.name, price: p.price, desc: p.desc, image_url: p.image_url || null,
@@ -324,6 +327,7 @@ function ProductEditor({ initial, nextSort, onClose, onSaved }) {
           colors: p.colors.map((c) => ({ id: c.id, name_fr: c.name_fr, name_ar: c.name_ar, hex: c.hex, price: c.price })),
         },
       })
+      if (saved && saved.translated === false) alert('Produit enregistré. La traduction automatique FR/AR est indisponible pour le moment : elle sera refaite toute seule dans quelques minutes.')
       onSaved()
     } catch (e2) {
       setErr(e2.status === 401 ? 'Session expirée. Reconnectez-vous.' : `Erreur d'enregistrement (${e2.message}). Réessayez.`)
@@ -401,7 +405,7 @@ function Products({ notify }) {
       {list.map((p) => (
         <div key={p.id} className={`ad-card ad-product ${p.active ? '' : 'off'}`}>
           <div className="ad-pimg" onClick={() => setEdit(p)}>
-            {p.image_url ? <img src={p.image_url} alt="" /> : '🪣'}
+            {p.image_url ? <img src={p.image_url} alt="" /> : <Ico n="bucket" size={26} />}
             {!p.active && <span className="ad-hidden-ribbon">Masqué sur le site</span>}
           </div>
           <button className="ad-product-main" onClick={() => setEdit(p)}>
@@ -477,11 +481,11 @@ function CalcEditor({ d, all, onClose, onSaved, notify }) {
   const save = async (e) => {
     e.preventDefault()
     const fail = (field, ref, msg) => { setBad(field); setErr(msg); ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }) }
-    if (!p.name.trim()) return fail('name', nameRef, '👆 Donnez un nom au produit.')
-    if (!(slot.bucket_kg > 0) || !(slot.coverage_m2_per_kg > 0)) return fail('size', priceRef, '👆 Indiquez la taille du seau et la surface qu\'il couvre.')
-    if (isPrimer && !(Number(p.price) > 0)) return fail('price', priceRef, `👆 Entrez le prix du seau de ${p.bucket_kg} kg.`)
-    if (!isPrimer && !linked && !p.colors.length) return fail('colors', colorsRef, '👆 Ajoutez au moins une couleur (avec son prix).')
-    if (!isPrimer && !linked && !(Number(p.price) > 0) && !p.colors.every((c) => Number(c.price) > 0)) return fail('price', priceRef, `👆 Entrez le prix du seau de ${p.bucket_kg} kg ou un prix pour chaque couleur.`)
+    if (!p.name.trim()) return fail('name', nameRef, 'Donnez un nom au produit.')
+    if (!(slot.bucket_kg > 0) || !(slot.coverage_m2_per_kg > 0)) return fail('size', priceRef, 'Indiquez la taille du seau et la surface qu\'il couvre.')
+    if (isPrimer && !(Number(p.price) > 0)) return fail('price', priceRef, `Entrez le prix du seau de ${p.bucket_kg} kg.`)
+    if (!isPrimer && !linked && !p.colors.length) return fail('colors', colorsRef, 'Ajoutez au moins une couleur (avec son prix).')
+    if (!isPrimer && !linked && !(Number(p.price) > 0) && !p.colors.every((c) => Number(c.price) > 0)) return fail('price', priceRef, `Entrez le prix du seau de ${p.bucket_kg} kg ou un prix pour chaque couleur.`)
     setBusy(true); setErr(''); setBad('')
     try {
       await api('/api/admin/calc', {
@@ -522,7 +526,7 @@ function CalcEditor({ d, all, onClose, onSaved, notify }) {
           <section className={`ad-card ${bad === 'name' ? 'bad' : ''}`} ref={nameRef}>
             <h3>Nom affiché au client</h3>
             <input className="ad-big" value={p.name} onChange={(e) => set('name', e.target.value)} placeholder={isPrimer ? 'Ex : Primaire Époxy Traité' : 'Ex : Finition Époxy Filmogène'} />
-            <div className="ad-auto">🌐 Écrivez en français ou en arabe : la traduction est automatique.</div>
+            <div className="ad-auto"><Ico n="globe" /> Écrivez en français ou en arabe : la traduction est automatique.</div>
           </section>
           <section className="ad-card">
             <h3>Quand est-il proposé ?</h3>
@@ -601,7 +605,7 @@ function CalcEditor({ d, all, onClose, onSaved, notify }) {
             </section>
           )}
 
-          {!isNew && <button type="button" className="ad-btn ghost block ad-danger" onClick={remove} disabled={busy}>🗑️ Supprimer ce produit</button>}
+          {!isNew && <button type="button" className="ad-btn ghost block ad-danger" onClick={remove} disabled={busy}><Ico n="trash" /> Supprimer ce produit</button>}
         </div>
         {err && <div className="ad-error full">{err}</div>}
       </div>
@@ -647,7 +651,7 @@ function CalcAdmin({ notify }) {
     return (
       <div className={`ad-card ad-product ad-calc ${d.active ? '' : 'off'}`}>
         <div className="ad-pimg" onClick={() => setEdit({ slot: d.slot })}>
-          {d.image_url ? <img src={d.image_url} alt="" /> : d.role === 'primer' ? '🧴' : '🎨'}
+          {d.image_url ? <img src={d.image_url} alt="" /> : <Ico n={d.role === 'primer' ? 'flask' : 'palette'} size={26} />}
           {!d.active && <span className="ad-hidden-ribbon">Masqué sur le site</span>}
         </div>
         <button type="button" className="ad-product-main" onClick={() => setEdit({ slot: d.slot })}>
@@ -699,7 +703,7 @@ function CalcAdmin({ notify }) {
   return (
     <>
       <div className={`ad-auto ${allReady ? 'ok' : ''}`}>
-        {allReady ? '✅ Le calculateur est prêt : tous les produits visibles ont leurs prix.' : '👇 Complétez les produits « À compléter » (prix, couleurs) pour que la page « Calculer mon besoin » fonctionne.'}
+        {allReady ? <><Ico n="checkCircle" /> Le calculateur est prêt : tous les produits visibles ont leurs prix.</> : <><Ico n="alert" /> Complétez les produits « À compléter » (prix, couleurs) pour que la page « Calculer mon besoin » fonctionne.</>}
       </div>
       <Section role="primer" title="Primaires" sub="Choisis automatiquement selon la famille (époxy / polyuréthane) et le support (béton / surface lisse)." addLabel="Ajouter un primaire" />
       <Section role="finition" title="Finitions" sub="Choisies selon la famille, l'emplacement (intérieur / extérieur) et le type (filmogène / autolissant). Chaque couleur a son prix." addLabel="Ajouter une finition" />
@@ -734,13 +738,13 @@ function ContactForm({ notify }) {
   }
   const save = async (e) => {
     e.preventDefault(); setBusy(true)
-    try { const { tiktok_pixel, meta_pixel, ga_id, ...rest } = s; await api('/api/admin/settings', { method: 'PUT', body: rest }); notify('Enregistré ✓') }
+    try { const { tiktok_pixel, meta_pixel, ...rest } = s; await api('/api/admin/settings', { method: 'PUT', body: rest }); notify('Enregistré ✓') }
     catch { notify("Erreur d'enregistrement") }
     setBusy(false)
   }
   return (
     <form onSubmit={save} className="ad-contact">
-      <section className="ad-card"><h3>📄 Catalogues d'application</h3>
+      <section className="ad-card"><h3><Ico n="file" /> Catalogues d'application</h3>
         <div className="ad-auto">Le client voit le bouton « Voir le catalogue » dès qu'il choisit l'épaisseur, et le lien apparaît aussi sur son reçu. « Filmogène » = rouleau, « Autolissant » = raclette. Envoyez un PDF par outil (max 25 Mo) ou collez un lien. Tant qu'aucun PDF n'est envoyé, rien ne s'affiche.</div>
         {[['catalog_roller', 'Catalogue — Rouleau (Filmogène)'], ['catalog_squeegee', 'Catalogue — Raclette (Autolissant)']].map(([k, label]) => (
           <div className="ad-field" key={k}><label>{label}</label>
@@ -753,42 +757,40 @@ function ContactForm({ notify }) {
           </div>
         ))}
       </section>
-      <section className="ad-card"><h3>📞 Téléphone</h3>
+      <section className="ad-card"><h3><Ico n="phone" /> Téléphone</h3>
         {f('phone', 'Numéro principal', 'ltr', '0X XX XX XX XX', 'tel')}{f('phone2', 'Numéro 2 (optionnel)', 'ltr', '', 'tel')}
       </section>
-      <section className="ad-card"><h3>💬 WhatsApp</h3>
+      <section className="ad-card"><h3><Ico n="msg" /> WhatsApp</h3>
         {f('whatsapp', 'Numéro WhatsApp', 'ltr', '+213 792 27 31 00', 'tel')}
         <div className="ad-auto">Laissez vide pour utiliser +213 792 27 31 00. Le bouton vert du site ouvre directement ce numéro.</div>
       </section>
-      <section className="ad-card"><h3>🌐 En ligne</h3>
+      <section className="ad-card"><h3><Ico n="globe" /> En ligne</h3>
         {f('email', 'Email', 'ltr', '', 'email')}{f('facebook', 'Lien Facebook', 'ltr', 'https://')}{f('instagram', 'Lien Instagram', 'ltr', 'https://')}
       </section>
-      <section className="ad-card"><h3>📍 Adresse et horaires</h3>
+      <section className="ad-card"><h3><Ico n="pin" /> Adresse et horaires</h3>
         {f('address', 'Adresse', undefined, 'Ex : Oran, Algérie')}
         {f('hours', 'Horaires', undefined, 'Ex : Sam – Jeu : 08h – 17h')}
-        <div className="ad-auto">🌐 Écrivez en français ou en arabe : la traduction est automatique.</div>
+        <div className="ad-auto"><Ico n="globe" /> Écrivez en français ou en arabe : la traduction est automatique.</div>
       </section>
       <div className="ad-savebar static"><button className="ad-btn primary block" disabled={busy}>{busy ? 'Enregistrement…' : 'Enregistrer'}</button></div>
     </form>
   )
 }
 
-/* ---------------- Marketing: pixels + analytics ---------------- */
+/* ---------------- Marketing: TikTok + Facebook pixels ---------------- */
 const ID_RE = /^[A-Za-z0-9_-]{4,40}$/
 const TRACKERS = [
-  { k: 'tiktok_pixel', icon: '🎵', title: 'TikTok Pixel', label: 'Pixel ID', ph: 'Ex : CABCDE1234567890ABCD',
+  { k: 'tiktok_pixel', icon: 'tiktok', title: 'TikTok Pixel', label: 'Pixel ID', ph: 'Ex : CABCDE1234567890ABCD',
     help: "TikTok Ads Manager → Assets → Events → Web Events → votre pixel → copiez le « Pixel ID » (lettres et chiffres)." },
-  { k: 'meta_pixel', icon: '📘', title: 'Facebook Pixel (Meta)', label: 'Pixel ID', ph: 'Ex : 123456789012345',
+  { k: 'meta_pixel', icon: 'facebook', title: 'Facebook Pixel (Meta)', label: 'Pixel ID', ph: 'Ex : 123456789012345',
     help: "Meta Events Manager → Sources de données → votre pixel → copiez l'ID du pixel (un nombre de 15-16 chiffres)." },
-  { k: 'ga_id', icon: '📊', title: 'Google Analytics', label: 'ID de mesure (GA4)', ph: 'Ex : G-ABC123DEF4',
-    help: "Google Analytics → Admin → Flux de données → votre site web → copiez l'« ID de mesure » qui commence par G-." },
 ]
 
 function MarketingForm({ notify }) {
   const [s, setS] = useState(null)
   const [busy, setBusy] = useState(false)
   useEffect(() => {
-    api('/api/admin/settings').then((d) => setS({ tiktok_pixel: d.tiktok_pixel || '', meta_pixel: d.meta_pixel || '', ga_id: d.ga_id || '' })).catch(() => {})
+    api('/api/admin/settings').then((d) => setS({ tiktok_pixel: d.tiktok_pixel || '', meta_pixel: d.meta_pixel || '' })).catch(() => {})
   }, [])
   if (!s) return null
   const bad = (k) => s[k] && !ID_RE.test(s[k].trim())
@@ -797,17 +799,17 @@ function MarketingForm({ notify }) {
     if (TRACKERS.some((t) => bad(t.k))) { notify('Un des identifiants est invalide (lettres, chiffres, - et _ seulement).'); return }
     setBusy(true)
     try {
-      await api('/api/admin/settings', { method: 'PUT', body: { tiktok_pixel: s.tiktok_pixel.trim(), meta_pixel: s.meta_pixel.trim(), ga_id: s.ga_id.trim() } })
+      await api('/api/admin/settings', { method: 'PUT', body: { tiktok_pixel: s.tiktok_pixel.trim(), meta_pixel: s.meta_pixel.trim() } })
       notify('Enregistré ✓ (actif sur le site dans ~30 s)')
     } catch { notify("Erreur d'enregistrement") }
     setBusy(false)
   }
   return (
     <form onSubmit={save} className="ad-contact">
-      <div className="ad-auto">Collez uniquement l'identifiant : le site installe tout seul le suivi (pas de code à copier). Laissez vide pour désactiver. Le suivi n'est jamais actif dans l'administration.</div>
+      <div className="ad-auto"><Ico n="info" /> Collez uniquement l'identifiant : le site installe tout seul le suivi (pas de code à copier). Laissez vide pour désactiver. Le suivi n'est jamais actif dans l'administration.</div>
       {TRACKERS.map((t) => (
         <section className="ad-card" key={t.k}>
-          <h3>{t.icon} {t.title} <span className={`ad-pill ${s[t.k] && !bad(t.k) ? 'on' : ''}`}>{s[t.k] && !bad(t.k) ? 'Actif' : 'Désactivé'}</span></h3>
+          <h3><Ico n={t.icon} size={18} /> {t.title} <span className={`ad-pill ${s[t.k] && !bad(t.k) ? 'on' : ''}`}>{s[t.k] && !bad(t.k) ? 'Actif' : 'Désactivé'}</span></h3>
           <div className="ad-field"><label>{t.label}</label>
             <input dir="ltr" placeholder={t.ph} value={s[t.k]} autoComplete="off" spellCheck={false} onChange={(e) => setS({ ...s, [t.k]: e.target.value })} />
             {bad(t.k) && <small className="ad-err">Format invalide : lettres, chiffres, - et _ uniquement.</small>}
@@ -815,11 +817,11 @@ function MarketingForm({ notify }) {
           <div className="ad-auto">{t.help}</div>
         </section>
       ))}
-      <section className="ad-card"><h3>🎯 Événements envoyés</h3>
+      <section className="ad-card"><h3><Ico n="target" size={18} /> Événements envoyés</h3>
         <div className="ad-auto">
           • <b>Page vue</b> à chaque page visitée<br />
-          • <b>Ajout au reçu</b> : AddToCart (Meta, TikTok) · add_to_cart (Analytics)<br />
-          • <b>Demande envoyée</b> : Lead (Meta) · SubmitForm (TikTok) · generate_lead (Analytics), avec le montant en DZD
+          • <b>Ajout au reçu</b> : AddToCart<br />
+          • <b>Demande envoyée</b> : Lead (Facebook) · SubmitForm (TikTok), avec le montant en DZD
         </div>
       </section>
       <div className="ad-savebar static"><button className="ad-btn primary block" disabled={busy}>{busy ? 'Enregistrement…' : 'Enregistrer'}</button></div>
@@ -857,7 +859,7 @@ export default function Admin() {
   if (authed === undefined) return <div className="ad-login"><p>…</p></div>
   if (!authed) return <Login onDone={() => setAuthed(true)} />
 
-  const tabs = [['orders', 'Commandes', ICONS.orders], ['calc', 'Calculateur', ICONS.calc], ['products', 'Produits', ICONS.products], ['marketing', 'Marketing', ICONS.marketing], ['contact', 'Contact', ICONS.contact]]
+  const tabs = [['orders', 'Commandes', ICONS.orders], ['stats', 'Stats', ICONS.stats], ['calc', 'Calculateur', ICONS.calc], ['products', 'Produits', ICONS.products], ['marketing', 'Marketing', ICONS.marketing], ['contact', 'Contact', ICONS.contact]]
 
   return (
     <div className="ad">
@@ -872,8 +874,9 @@ export default function Admin() {
       </header>
 
       <main className="ad-main">
-        <div className="ad-head"><div><h1>{tabs.find((t) => t[0] === tab)[1]}</h1><p>{{ orders: 'Reçus de vos clients : appelez, écrivez sur WhatsApp, suivez le statut', calc: 'Les produits de la page « Calculer mon besoin » : prix, couleurs et photos du reçu', products: 'Produits simples : photo, description, couleurs et prix', marketing: 'TikTok Pixel, Facebook Pixel et Google Analytics : mesurez vos visites et vos publicités', contact: 'Coordonnées et catalogues affichés sur le site' }[tab]}</p></div></div>
+        <div className="ad-head"><div><h1>{tab === 'stats' ? 'Statistiques' : tabs.find((t) => t[0] === tab)[1]}</h1><p>{{ orders: 'Reçus de vos clients : appelez, écrivez sur WhatsApp, suivez le statut', stats: 'Visiteurs, commandes et chiffre d\'affaires : suivez la croissance de votre site', calc: 'Les produits de la page « Calculer mon besoin » : prix, couleurs et photos du reçu', products: 'Produits simples : photo, description, couleurs et prix', marketing: 'TikTok Pixel et Facebook Pixel : mesurez vos publicités', contact: 'Coordonnées et catalogues affichés sur le site' }[tab]}</p></div></div>
         {tab === 'orders' && <Orders onCount={setCount} notify={notify} />}
+        {tab === 'stats' && <Stats />}
         {tab === 'calc' && <CalcAdmin notify={notify} />}
         {tab === 'products' && <Products notify={notify} />}
         {tab === 'marketing' && <MarketingForm notify={notify} />}

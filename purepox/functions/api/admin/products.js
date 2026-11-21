@@ -1,5 +1,5 @@
 import { json, bad, clean, num, group, purgePublic } from '../../_lib/util.js'
-import { bilingual } from '../../_lib/translate.js'
+import { bilingual, pairState } from '../../_lib/translate.js'
 
 const HEX = /^#[0-9a-fA-F]{6}$/
 const pickOf = (v, allowed, fallback) => (allowed.includes(v) ? v : fallback)
@@ -55,7 +55,8 @@ export async function onRequestPost({ request, env }) {
   try { prev = await db.prepare('SELECT name_fr,name_ar,desc_fr,desc_ar FROM products WHERE id = ?').bind(id).first() } catch { /* new product */ }
   const pair = async (text, f, a) => {
     if (!text) return { fr: '', ar: '' }
-    if (prev && prev[f] && prev[a] && (text === prev[f] || text === prev[a])) return { fr: prev[f], ar: prev[a] }
+    // unchanged text with a complete FR+AR pair: keep it. Otherwise (new text, or an earlier translation that failed) translate again.
+    if (prev && prev[f] && prev[a] && (text === prev[f] || text === prev[a]) && pairState(prev[f], prev[a]).done) return { fr: prev[f], ar: prev[a], ok: true }
     return bilingual(env, text)
   }
   const [name, desc] = await Promise.all([pair(nameIn, 'name_fr', 'name_ar'), pair(descIn, 'desc_fr', 'desc_ar')])
@@ -101,5 +102,5 @@ export async function onRequestPost({ request, env }) {
     return bad('server_error', 500)
   }
   await purgePublic(request)
-  return json({ ok: true, id })
+  return json({ ok: true, id, translated: name.ok !== false && desc.ok !== false })
 }

@@ -6,6 +6,7 @@ import { fetchCatalogue } from '../lib/data'
 import { money } from '../lib/calc'
 import { waLink } from '../lib/whatsapp'
 import Bucket from '../components/Bucket'
+import Photo from '../components/Photo'
 
 // Normal product: name, photo, description, colours with their price. The client picks a colour and a number of buckets.
 export default function Product({ settings }) {
@@ -58,9 +59,7 @@ export default function Product({ settings }) {
       <div className="pp-grid">
         <div className="pp-media">
           <div className={`pp-art ${product.image_url ? 'photo' : ''}`}>
-            {product.image_url
-              ? <img src={product.image_url} alt={pick(product, 'name')} />
-              : <Bucket key={colorId} hex={color?.hex || '#CE9B3A'} className="pop" />}
+            <Photo src={product.image_url} alt={pick(product, 'name')} eager fallback={<Bucket key={colorId} hex={color?.hex || '#CE9B3A'} className="pop" />} />
             {color && <div className="art-chip"><i style={{ background: color.hex }} /><span>{pick(color, 'name')}</span></div>}
           </div>
         </div>
@@ -68,7 +67,7 @@ export default function Product({ settings }) {
         <div className="pp-panel">
           <header className="pp-head">
             <h1>{pick(product, 'name')}</h1>
-            {pick(product, 'desc') && <p className="lead">{pick(product, 'desc')}</p>}
+            {pick(product, 'desc') && <p className="lead pp-desc">{pick(product, 'desc')}</p>}
             <div className="pp-facts one"><div><small>{t('price_label')}</small><b>{color || !hasColors || prices.every((x) => x === prices[0]) ? '' : `${t('from')} `}{money(shown)} {t('currency')}</b></div></div>
           </header>
 

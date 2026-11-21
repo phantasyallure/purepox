@@ -1,5 +1,6 @@
 import { json, group } from '../_lib/util.js'
 import { readCalc } from './admin/calc.js'
+import { healTranslations } from '../_lib/translate.js'
 
 // Public catalogue + contact settings. Cached at the edge so visitors rarely touch the database.
 export async function onRequestGet(ctx) {
@@ -22,6 +23,15 @@ export async function onRequestGet(ctx) {
       { 'cache-control': 'public, max-age=20, s-maxage=30' }
     )
     ctx.waitUntil(cache.put(key, res.clone()))
+    // rows whose Arabic/French text is missing (translation failed earlier) are repaired in the background;
+    // the next visitor then gets the finished text
+    if (ctx.waitUntil) {
+      ctx.waitUntil(
+        healTranslations(env)
+          .then((changed) => (changed ? cache.delete(key) : null))
+          .catch((e) => console.error('heal_failed', e))
+      )
+    }
     return res
   } catch (e) {
     console.error(e)

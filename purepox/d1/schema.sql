@@ -66,8 +66,7 @@ CREATE TABLE IF NOT EXISTS settings (
   catalog_roller TEXT DEFAULT '',     -- application catalog: roller (< 1 mm), PDF uploaded to R2, or a link
   catalog_squeegee TEXT DEFAULT '',   -- application catalog: squeegee (> 1 mm)
   tiktok_pixel TEXT DEFAULT '',       -- TikTok Pixel ID
-  meta_pixel TEXT DEFAULT '',         -- Facebook / Meta Pixel ID
-  ga_id TEXT DEFAULT ''               -- Google Analytics 4 measurement ID (G-XXXXXXXXXX)
+  meta_pixel TEXT DEFAULT ''          -- Facebook / Meta Pixel ID
 );
 INSERT OR IGNORE INTO settings (id) VALUES (1);
 
@@ -108,3 +107,14 @@ CREATE TABLE IF NOT EXISTS calc_colors (
   sort_order INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_calc_colors_slot ON calc_colors(slot);
+
+-- Visitor statistics (Admin → Statistiques): one anonymous row per page view, no cookies, no IP
+CREATE TABLE IF NOT EXISTS visits (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+  vid TEXT NOT NULL,                             -- random id kept in the visitor's browser
+  path TEXT NOT NULL,
+  ref TEXT DEFAULT '',                           -- source: Facebook, TikTok, Google, Direct...
+  device TEXT DEFAULT ''                         -- Mobile | Tablette | Ordinateur
+);
+CREATE INDEX IF NOT EXISTS idx_visits_ts ON visits(ts);

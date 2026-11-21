@@ -3,6 +3,7 @@ import { useLang } from '../lib/i18n'
 import { useCart } from '../lib/cart'
 import { fetchCalc } from '../lib/data'
 import { calcMix, effPrice, primersFor, finishesFor, locationsFor, thicknessesFor, TOOL_OF, packsText, money, WHOLESALE_FROM } from '../lib/calc'
+import { Ico } from '../lib/ico'
 import { waLink } from '../lib/whatsapp'
 import { WaIcon } from '../components/WhatsAppButton'
 
@@ -163,7 +164,7 @@ export default function Solution({ settings }) {
             <div>
               {seg('thickness', ['lt1', 'gt1'].map((th) => { const off = Boolean(ths) && !ths.includes(th); return [th, t(`th_${th}`), off ? t('not_available') : `🖌️ ${t(`tool_${TOOL_OF[th]}`)}`, '', off] }))}
               {tool && <div className="sol-note"><b>{t(`tool_${tool}_d`)}</b></div>}
-              {catalog && <a className="sol-watch" href={catalog} target="_blank" rel="noreferrer">📄 {t('view_catalog')} — {t(`tool_${tool}`)}</a>}
+              {catalog && <a className="sol-watch" href={catalog} target="_blank" rel="noreferrer"><Ico n="file" /> {t('view_catalog')} — {t(`tool_${tool}`)}</a>}
             </div>
           </div>
           {cands.length > 1 && (
@@ -199,7 +200,7 @@ export default function Solution({ settings }) {
                     <div className="sol-custom-card">
                       <label className="sol-pick" style={{ background: customHex || '#e4e4e8' }} title={t('custom_color')}>
                         <input type="color" value={customHex || '#cccccc'} onChange={(e) => { setCustomHex(e.target.value); setNeed(null) }} aria-label={t('custom_color')} />
-                        {!customHex && <span>🎨</span>}
+                        {!customHex && <span><Ico n="palette" size={18} /></span>}
                       </label>
                       <input type="text" maxLength={60} value={customName} placeholder={t('custom_ph')} onChange={(e) => { setCustomName(e.target.value); setNeed(null) }} />
                     </div>
@@ -236,7 +237,7 @@ export default function Solution({ settings }) {
                 <Line role="primer" p={pri} res={priRes} />
                 <Line role="finition" p={fin} c={customColor || color} res={finRes} onDemand={Boolean(customColor)} />
                 <div className="sol-facts">
-                  <span>🖌️ {t(`tool_${tool}_d`)}</span>
+                  <span><Ico n="brush" /> {t(`tool_${tool}_d`)}</span>
                 </div>
                 <div className="pp-total"><span>{t('total')}</span><b>{ready ? `${money(total)} ${t('currency')}` : '—'}</b></div>
                 {wholesale && <p className="ws-badge"><span>{t('price_wholesale')}</span>{t('wholesale_note')}</p>}
@@ -246,7 +247,7 @@ export default function Solution({ settings }) {
             )}
             {a.family && (
               <div className="sol-tip">
-                <span>💡 {offerOther ? t('tip_ep') : t('tip_zones')}</span>
+                <span><Ico n="bulb" /> {offerOther ? t('tip_ep') : t('tip_zones')}</span>
                 {offerOther && <button type="button" onClick={() => set('family', otherFam)}>{t(`switch_${otherFam}`)}</button>}
               </div>
             )}

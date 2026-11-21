@@ -1130,3 +1130,48 @@ html { scroll-padding-top: 90px; }
 .drawer-nav button.hot { color: var(--orange-d); }
 @media (max-width: 420px) { .hb, .cart-btn { width: 40px; height: 40px; } }
 @media (prefers-reduced-motion: reduce) { .drawer, .drawer-bg, .drawer-nav button { transition: none !important; } }
+
+/* inline icons (replace emojis) */
+.ico { flex: none; vertical-align: -0.2em; }
+
+/* =====================================================================
+   v6 — product photos shown in full (no cropping) on every screen,
+        and descriptions that wrap / clamp correctly in French and Arabic
+   ===================================================================== */
+/* photo frame: blurred copy behind, sharp photo (object-fit: contain) on top */
+.ph { position: absolute; inset: 0; display: block; overflow: hidden; background: #ececf0; isolation: isolate; }
+.ph::before { content: ''; position: absolute; inset: -12%; z-index: -1; background: var(--ph-src) center / cover no-repeat; filter: blur(22px) saturate(1.15); opacity: 0; transition: opacity .4s; }
+.ph.ready::before { opacity: .85; }
+.ph:not(.ready)::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.65) 50%, transparent 80%); background-size: 200% 100%; animation: ph-shimmer 1.2s linear infinite; }
+@keyframes ph-shimmer { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+.ph .ph-fg { position: relative; display: block; width: 100%; height: 100%; max-width: none; object-fit: contain; object-position: center; opacity: 0; filter: none; transform: none; animation: none; transition: opacity .35s ease, transform .6s var(--ease-out, ease); }
+.ph.ready .ph-fg { opacity: 1; }
+.card:hover .card-art .ph .ph-fg { transform: scale(1.04); }
+
+/* home cards: same box on every phone, whole photo visible */
+.card-art { height: auto; aspect-ratio: 4 / 3; }
+.card-art.photo { padding: 0; }
+.card-art .bucket { height: 82%; }
+.card-desc { color: var(--gray); font-size: .92rem; line-height: 1.6; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+[dir='rtl'] .card-desc { line-height: 1.85; } /* Arabic marks need more room, otherwise the last line is clipped */
+.card-body h3 { overflow-wrap: anywhere; }
+
+/* product page: square frame, whole photo visible */
+.pp-art.photo { background: #ececf0; box-shadow: 0 30px 70px -40px rgba(17,17,19,.45); }
+.pp-art .art-chip { z-index: 2; }
+.pp-desc { white-space: pre-line; overflow-wrap: anywhere; line-height: 1.75; }
+[dir='rtl'] .pp-desc { line-height: 1.95; }
+@media (max-width: 900px) {
+  .pp-art { aspect-ratio: 1 / 1; max-width: 560px; margin-inline: auto; border-radius: 24px; }
+  .pp-art .bucket { width: 50%; }
+}
+@media (max-width: 560px) {
+  .grid { grid-template-columns: 1fr; gap: 20px; }
+  .card-art { aspect-ratio: 1 / 1; }
+  .pp-art { border-radius: 20px; }
+  .pp-head h1 { overflow-wrap: anywhere; }
+}
+
+/* small thumbnails (solution page, receipt): never crop the bucket */
+.sol-thumb, .rc-img, .ad-rl img, .ad-pimg img { object-fit: contain; background: #fff; }
+.ad-drop img { object-fit: contain; background: #f4f4f6; }

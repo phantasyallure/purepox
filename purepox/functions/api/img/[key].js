@@ -1,10 +1,16 @@
 // Serves product images and PDF catalogs stored in R2
-export async function onRequestGet({ request, params, env }) {
+export async function onRequestGet({ request, params, env, waitUntil }) {
   const key = String(params.key || '')
   if (!/^[\w-]+\.(png|jpg|webp|gif|avif|pdf)$/.test(key)) return new Response('Not found', { status: 404 })
   if (!env.IMAGES) return new Response('Not found', { status: 404 })
 
   const ranged = request.headers.has('range')
+  const cache = caches.default
+  const ckey = new Request(new URL(request.url).origin + '/api/img/' + key)
+  if (!ranged) {
+    const hit = await cache.match(ckey)
+    if (hit) return hit
+  }
   const obj = await env.IMAGES.get(key, ranged ? { range: request.headers } : undefined)
   if (!obj) return new Response('Not found', { status: 404 })
 
@@ -22,5 +28,9 @@ export async function onRequestGet({ request, params, env }) {
     return new Response(obj.body, { status: 206, headers })
   }
   headers.set('content-length', String(obj.size))
-  return new Response(obj.body, { headers })
+  headers.set('x-content-type-options', 'nosniff')
+  const res = new Response(obj.body, { headers })
+  // keep a copy at the edge (small files only: product photos), the next visitors get it without touching R2
+  if (!ranged && obj.size <= 4 * 1024 * 1024 && waitUntil) waitUntil(cache.put(ckey, res.clone()))
+  return res
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLang } from '../lib/i18n'
 import { useCart } from '../lib/cart'
+import { Ico } from '../lib/ico'
 import { submitOrder } from '../lib/data'
 import { money, packsText } from '../lib/calc'
 import { trackOrder } from '../lib/track'
@@ -38,7 +39,7 @@ function Receipt({ items, total, onRemove }) {
               {l.on_demand && <div className="rc-price od">{t('on_demand')}</div>}
             </div>
           ))}
-          <div className="rc-facts"><span>🖌️ {t(`tool_${i.info.tool}_d`)}</span>{i.info.catalog && <a className="rc-cat" href={i.info.catalog} target="_blank" rel="noreferrer">📄 {t('view_catalog')}</a>}</div>
+          <div className="rc-facts"><span><Ico n="brush" /> {t(`tool_${i.info.tool}_d`)}</span>{i.info.catalog && <a className="rc-cat" href={i.info.catalog} target="_blank" rel="noreferrer">📄 {t('view_catalog')}</a>}</div>
         </div>
       ) : (
         <div className="rc-group" key={i.key}>
