@@ -1,6 +1,8 @@
-// Shrinks a photo in the browser before upload: max 1400 px, WebP (JPEG fallback), ~80 % quality.
-// A 4 MB phone photo typically becomes 100–250 KB, so the site loads fast on mobile data.
-const MAX = 1400
+// Prepares every product / calculator photo before upload: always a SQUARE of 1200 x 1200 px.
+// The whole picture is kept (nothing is cut off): it is centred in the square and the free space is filled
+// with a soft blurred copy of the photo (plain white if the browser cannot blur). Saved as WebP (JPEG fallback),
+// usually 100-250 KB, so the site stays fast on mobile data.
+export const SIZE = 1200
 
 async function load(file) {
   if (window.createImageBitmap) {
@@ -23,17 +25,37 @@ export async function compressImage(file) {
     const img = await load(file)
     const w0 = img.width || img.naturalWidth
     const h0 = img.height || img.naturalHeight
-    const k = Math.min(1, MAX / Math.max(w0, h0))
+    if (!w0 || !h0) return file
+
     const canvas = document.createElement('canvas')
-    canvas.width = Math.round(w0 * k)
-    canvas.height = Math.round(h0 * k)
-    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+    canvas.width = SIZE
+    canvas.height = SIZE
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, SIZE, SIZE)
+
+    // 1) free space: blurred "cover" copy of the photo (skipped when it already fills the square)
+    if (Math.abs(w0 - h0) / Math.max(w0, h0) > 0.02 && 'filter' in ctx) {
+      const cover = Math.max(SIZE / w0, SIZE / h0) * 1.15
+      ctx.save()
+      ctx.filter = 'blur(40px) saturate(1.1)'
+      ctx.globalAlpha = 0.9
+      ctx.drawImage(img, (SIZE - w0 * cover) / 2, (SIZE - h0 * cover) / 2, w0 * cover, h0 * cover)
+      ctx.restore()
+    }
+
+    // 2) the whole photo, centred, as large as the square allows
+    const fit = Math.min(SIZE / w0, SIZE / h0)
+    const w = Math.round(w0 * fit)
+    const h = Math.round(h0 * fit)
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage(img, Math.round((SIZE - w) / 2), Math.round((SIZE - h) / 2), w, h)
     if (img.close) img.close()
 
-    let blob = await toBlob(canvas, 'image/webp', 0.82)
+    let blob = await toBlob(canvas, 'image/webp', 0.86)
     let ext = 'webp'
-    if (!blob || blob.type !== 'image/webp') { blob = await toBlob(canvas, 'image/jpeg', 0.82); ext = 'jpg' }
-    if (!blob || blob.size >= file.size) return file // already small: keep the original
+    if (!blob || blob.type !== 'image/webp') { blob = await toBlob(canvas, 'image/jpeg', 0.86); ext = 'jpg' }
+    if (!blob) return file
     return new File([blob], `photo.${ext}`, { type: blob.type })
   } catch {
     return file
