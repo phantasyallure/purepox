@@ -1,113 +1,102 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { useLang } from '../lib/i18n'
-import { useCart } from '../lib/cart'
-import { fetchCatalogue } from '../lib/data'
-import { money } from '../lib/calc'
-import { waLink } from '../lib/whatsapp'
-import Bucket from '../components/Bucket'
-import Photo from '../components/Photo'
+import { json, bad, clean, num, group, purgePublic } from '../../_lib/util.js'
 
-// Normal product: name, photo, description, colours with their price. The client picks a colour and a number of buckets.
-export default function Product({ settings }) {
-  const { id } = useParams()
-  const { t, pick } = useLang()
-  const { add, setOpen } = useCart()
-  const [product, setProduct] = useState(undefined)
-  const [colorId, setColorId] = useState(null)
-  const [qty, setQty] = useState(1)
-  const [need, setNeed] = useState(false)
+const HEX = /^#[0-9a-fA-F]{6}$/
+const pickOf = (v, allowed, fallback) => (allowed.includes(v) ? v : fallback)
+const MAX_COLORS = 12
 
-  useEffect(() => {
-    document.body.classList.add('on-product')
-    return () => document.body.classList.remove('on-product')
-  }, [])
+export async function onRequestGet({ env }) {
+  const [p, c] = await Promise.all([
+    env.DB.prepare('SELECT * FROM products ORDER BY sort_order, created_at').all(),
+    env.DB.prepare('SELECT * FROM colors ORDER BY sort_order').all(),
+  ])
+  return json(group(p.results, c.results))
+}
 
-  useEffect(() => {
-    window.scrollTo(0, 0)
-    fetchCatalogue()
-      .then((all) => { setProduct(all.find((x) => x.id === id) || null); setColorId(null); setQty(1) })
-      .catch(() => setProduct(null))
-  }, [id])
+// Create or update a product together with its colors (atomic batch)
+export async function onRequestPost({ request, env }) {
+  let b
+  try { b = await request.json() } catch { return bad('invalid') }
 
-  const color = useMemo(() => product?.colors?.find((c) => c.id === colorId), [product, colorId])
+  // Names are typed by hand in French and in Arabic (no automatic translation). One of them is enough:
+  // the site shows the other one when a language is missing. The description is typed by hand too (French and Arabic fields), exactly as written: never translated.
+  const nameFr = clean(b.name_fr ?? b.name, 120)
+  const nameAr = clean(b.name_ar, 120)
+  const nameIn = nameFr || nameAr
+  const descFr = clean(b.desc_fr ?? b.desc, 2000)
+  const descAr = clean(b.desc_ar, 2000)
+  const bucket = num(b.bucket_kg) ?? 20            // not used any more by normal products (kept for old rows)
+  const cov = num(b.coverage_m2_per_kg) ?? 1
+  if (!nameIn || !(bucket > 0) || !(cov > 0)) return bad('invalid_product')
 
-  if (product === undefined) return <div className="container section"><p className="muted center">{t('loading')}</p></div>
-  if (product === null) return <div className="container section"><Link to="/" className="back">{t('back')}</Link><p className="muted center">{t('none')}</p></div>
+  const colors = (Array.isArray(b.colors) ? b.colors : []).slice(0, MAX_COLORS).map((c, i) => ({
+    id: typeof c.id === 'string' && c.id ? c.id : crypto.randomUUID(),
+    name_fr: clean(c.name_fr, 80) || clean(c.hex, 9),
+    name_ar: clean(c.name_ar, 80) || clean(c.name_fr, 80) || clean(c.hex, 9),
+    hex: HEX.test(c.hex) ? c.hex : '#cccccc',
+    price: num(c.price),
+    price_wholesale: num(c.price_wholesale),
+    sort_order: i,
+  }))
+  if (colors.some((c) => !c.name_fr || (c.price !== null && c.price < 0) || (c.price_wholesale !== null && c.price_wholesale < 0))) return bad('invalid_color')
 
-  const priceOf = (c) => Number(c?.price ?? product.base_price) || 0
-  const hasColors = product.colors.length > 0
-  const prices = product.colors.map(priceOf).filter(Boolean)
-  const ready = !hasColors || Boolean(color) // a product without colours is ready right away
-  const shown = color ? priceOf(color) : prices.length ? Math.min(...prices) : Number(product.base_price) || 0
-  const total = ready ? (hasColors ? priceOf(color) : Number(product.base_price) || 0) * qty : 0
-  const bump = (d) => setQty((q) => Math.min(500, Math.max(1, q + d)))
+  // product price = the main price; a colour without its own price uses it
+  const prices = colors.map((c) => c.price).filter((x) => x !== null)
+  const base = num(b.price) ?? (prices.length ? Math.min(...prices) : num(b.base_price) ?? 0)
+  if (!(base > 0)) return bad('invalid_price')
+  const id = typeof b.id === 'string' && b.id ? b.id : crypto.randomUUID()
+  const img = typeof b.image_url === 'string' && (b.image_url.startsWith('/api/img/') || /^https?:\/\//.test(b.image_url)) ? b.image_url : null
 
-  const order = () => {
-    if (!ready) { setNeed(true); document.getElementById('step-color')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return }
-    add({
-      kind: 'catalog', productId: product.id, colorId: color?.id || null, qty,
-      product_fr: product.name_fr, product_ar: product.name_ar || product.name_fr, image_url: product.image_url || '',
-      color_fr: color?.name_fr, color_ar: color ? color.name_ar || color.name_fr : undefined, hex: color?.hex, unitPrice: color ? priceOf(color) : Number(product.base_price) || 0, total,
-    })
-    setOpen(true)
+  const family = pickOf(b.family, ['epoxy', 'polyurethane'], 'epoxy')
+  const surface = pickOf(b.surface, ['concrete', 'smooth', 'both'], 'smooth')
+  const location = pickOf(b.location, ['interior', 'exterior', 'both'], 'interior')
+  const thickness = pickOf(b.thickness, ['lt1', 'gt1', 'both'], 'lt1')
+  const role = pickOf(b.role, ['finition', 'primer'], 'finition')
+
+  const db = env.DB
+
+  const name = { fr: nameFr || nameAr, ar: nameAr }
+  const desc = { fr: descFr, ar: descAr }
+
+  const stmts = [
+    db.prepare(
+      `INSERT INTO products (id,name_fr,name_ar,desc_fr,desc_ar,image_url,bucket_kg,coverage_m2_per_kg,family,surface,location,thickness,role,base_price,sort_order,active,created_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+       ON CONFLICT(id) DO UPDATE SET name_fr=excluded.name_fr, name_ar=excluded.name_ar, desc_fr=excluded.desc_fr, desc_ar=excluded.desc_ar,
+         image_url=excluded.image_url, bucket_kg=excluded.bucket_kg, coverage_m2_per_kg=excluded.coverage_m2_per_kg,
+         family=excluded.family, role=excluded.role, surface=excluded.surface, location=excluded.location, thickness=excluded.thickness,
+         base_price=excluded.base_price, sort_order=excluded.sort_order, active=excluded.active`
+    ).bind(
+      id, name.fr, name.ar, desc.fr, desc.ar, img,
+      bucket, cov, family, surface, location, thickness, role, base, Math.round(num(b.sort_order) ?? 0), b.active === false ? 0 : 1, new Date().toISOString()
+    ),
+  ]
+
+  // remove colors the admin deleted
+  if (colors.length) {
+    stmts.push(
+      db.prepare(`DELETE FROM colors WHERE product_id = ? AND id NOT IN (${colors.map(() => '?').join(',')})`)
+        .bind(id, ...colors.map((c) => c.id))
+    )
+  } else {
+    stmts.push(db.prepare('DELETE FROM colors WHERE product_id = ?').bind(id))
+  }
+  for (const c of colors) {
+    stmts.push(
+      db.prepare(
+        `INSERT INTO colors (id,product_id,name_fr,name_ar,hex,price,price_wholesale,active,sort_order) VALUES (?,?,?,?,?,?,?,1,?)
+         ON CONFLICT(id) DO UPDATE SET name_fr=excluded.name_fr, name_ar=excluded.name_ar, hex=excluded.hex,
+           price=excluded.price, price_wholesale=excluded.price_wholesale, sort_order=excluded.sort_order, active=1
+         WHERE colors.product_id = excluded.product_id`
+      ).bind(c.id, id, c.name_fr, c.name_ar, c.hex, c.price, c.price_wholesale, c.sort_order)
+    )
   }
 
-  return (
-    <div className="container pp">
-      <Link to="/" className="back">{t('back')}</Link>
-      <div className="pp-grid">
-        <div className="pp-media">
-          <div className={`pp-art ${product.image_url ? 'photo' : ''}`}>
-            <Photo src={product.image_url} alt={pick(product, 'name')} eager fallback={<Bucket key={colorId} hex={color?.hex || '#CE9B3A'} className="pop" />} />
-            {color && <div className="art-chip"><i style={{ background: color.hex }} /><span>{pick(color, 'name')}</span></div>}
-          </div>
-        </div>
-
-        <div className="pp-panel">
-          <header className="pp-head">
-            <h1>{pick(product, 'name')}</h1>
-            {pick(product, 'desc') && <p className="lead pp-desc">{pick(product, 'desc')}</p>}
-            <div className="pp-facts one"><div><small>{t('price_label')}</small><b>{color || !hasColors || prices.every((x) => x === prices[0]) ? '' : `${t('from')} `}{money(shown)} {t('currency')}</b></div></div>
-          </header>
-
-          {hasColors && (
-          <section id="step-color" className={`pp-step ${need && !color ? 'need' : ''} ${color ? 'is-done' : ''}`}>
-            <div className="pp-step-h"><span className="n">{color ? '✓' : 1}</span><h2>{t('step_color')}</h2>
-              {color && <span className="pp-pick"><b>{pick(color, 'name')}</b></span>}
-            </div>
-            <div className="pp-swatches">
-              {product.colors.map((c) => (
-                <button key={c.id} type="button" className={`pp-sw ${c.id === colorId ? 'on' : ''}`} onClick={() => { setColorId(c.id); setNeed(false) }} aria-label={pick(c, 'name')} title={pick(c, 'name')}>
-                  <i style={{ background: c.hex }} />
-                  <span>{pick(c, 'name')}</span>
-                </button>
-              ))}
-            </div>
-            <a className="other-color" href={waLink(settings?.whatsapp, `${t('ask_msg')}${pick(product, 'name')}`)} target="_blank" rel="noreferrer">{t('other_color')}</a>
-          </section>
-          )}
-
-          <section className="pp-step is-done">
-            <div className="pp-step-h"><span className="n">{hasColors ? 2 : 1}</span><h2>{t('step_qty')}</h2></div>
-            <div className="pp-qty">
-              <button type="button" onClick={() => bump(-1)} aria-label="-">−</button>
-              <input type="number" min="1" max="500" inputMode="numeric" dir="ltr" value={qty} onChange={(e) => setQty(Math.min(500, Math.max(1, Math.floor(Number(e.target.value)) || 1)))} />
-              <button type="button" onClick={() => bump(1)} aria-label="+">+</button>
-            </div>
-          </section>
-
-          <section className="pp-sum">
-            <div className="pp-total"><span>{t('total')}</span><b>{ready ? `${money(total)} ${t('currency')}` : '—'}</b></div>
-            <div className="pp-actions"><button className="btn primary pp-order" onClick={order}>{t('order_btn')}</button></div>
-          </section>
-        </div>
-      </div>
-
-      <div className="pp-bar">
-        <div><small>{t('total')}</small><b>{ready ? `${money(total)} ${t('currency')}` : '—'}</b></div>
-        <button className="btn primary" onClick={order}>{t('order_btn')}</button>
-      </div>
-    </div>
-  )
+  try {
+    await db.batch(stmts)
+  } catch (e) {
+    console.error(e)
+    return bad('server_error', 500)
+  }
+  await purgePublic(request)
+  return json({ ok: true, id })
 }
