@@ -219,14 +219,14 @@ function PhotoField({ value, onChange, onBusy, hint }) {
       const fd = new FormData(); fd.append('file', small)
       const { url } = await api('/api/admin/upload', { method: 'POST', form: fd })
       onChange(url)
-      setInfo(small === file ? '' : `Photo compressée : ${kb(file.size)} → ${kb(small.size)}`)
+      setInfo(small === file ? '' : `Photo mise en 1200 × 1200 px : ${kb(file.size)} → ${kb(small.size)}`)
     } catch (e2) { setErr(e2.message === 'too_large' ? 'Image trop lourde (max 5 Mo).' : e2.message === 'no_storage' ? "Le stockage d'images n'est pas configuré." : "Impossible d'envoyer l'image.") }
     setUp(false); onBusy?.(false)
   }
   return (
     <>
       <label className={`ad-drop ${value ? 'has' : ''}`}>
-        {value ? <img src={value} alt="" /> : <span className="ad-drop-in"><b><Ico n="camera" size={28} /></b>{up ? 'Envoi…' : 'Ajouter une photo'}<small>{hint || 'optionnel'}</small></span>}
+        {value ? <img src={value} alt="" /> : <span className="ad-drop-in"><b><Ico n="camera" size={28} /></b>{up ? 'Envoi…' : 'Ajouter une photo'}<small>{hint || 'optionnel'} · sera mise en 1200 × 1200 px</small></span>}
         {value && <span className="ad-drop-chg">{up ? 'Envoi…' : 'Changer la photo'}</span>}
         <input type="file" accept="image/*" hidden onChange={(e) => upload(e.target.files?.[0])} />
       </label>
