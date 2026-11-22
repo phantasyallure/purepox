@@ -408,3 +408,10 @@
 .ad-pact { align-items: center; }
 .ad-pact .ad-trash { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border-radius: 10px; flex: none; }
 .ad-pact .ad-trash:hover { background: rgba(185, 28, 28, .1); }
+
+/* photos are stored as 1200 x 1200 squares: show them whole in the admin, and visible (not cropped) on receipts */
+.ad-drop.has { aspect-ratio: 1 / 1; max-width: 420px; margin-inline: auto; width: 100%; }
+.ad-drop img { object-fit: contain; background: #f4f4f6; }
+.ad-pimg img { object-fit: contain; background: #fff; }
+.ad-rl { grid-template-columns: 68px minmax(0, 1fr) auto; }
+.ad-rl img, .ad-rl-dot { width: 68px; height: 68px; border-radius: 14px; object-fit: contain; background: #fff; }
