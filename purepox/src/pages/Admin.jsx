@@ -293,6 +293,9 @@ function ColorsEditor({ colors, onChange, max, advanced, bad, bucketKg, smallKg,
 }
 
 /* ---------------- Normal product: name, photo, description, colours + prices ---------------- */
+const arLetters = (s) => (String(s || '').match(/[\u0600-\u06FF]/g) || []).length
+const latLetters = (s) => (String(s || '').match(/[A-Za-z\u00C0-\u024F]/g) || []).length
+const isArText = (s) => arLetters(s) > latLetters(s)
 const blank = { name: '', price: '', desc: '', image_url: '', active: true, colors: [] }
 const MAX_COLORS = 12
 
@@ -302,7 +305,9 @@ function ProductEditor({ initial, nextSort, onClose, onSaved }) {
     name_fr: initial?.name_fr || '',
     // an Arabic name that is only a copy of the French one (old automatic fallback) is shown empty
     name_ar: /[\u0600-\u06FF]/.test(initial?.name_ar || '') ? initial.name_ar : '',
-    desc: initial?.desc_fr || initial?.desc_ar || '',
+    // each description box only holds text of its own language (older products stored one text in both)
+    desc_fr: [initial?.desc_fr, initial?.desc_ar].find((t) => t && !isArText(t)) || '',
+    desc_ar: [initial?.desc_ar, initial?.desc_fr].find((t) => t && isArText(t)) || '',
     price: initial?.base_price > 0 ? initial.base_price : '',
     colors: (initial?.colors || []).map((c) => ({ ...c })),
   })
@@ -324,7 +329,7 @@ function ProductEditor({ initial, nextSort, onClose, onSaved }) {
       await api('/api/admin/products', {
         method: 'POST',
         body: {
-          id: p.id, name_fr: p.name_fr, name_ar: p.name_ar, price: p.price, desc: p.desc, image_url: p.image_url || null,
+          id: p.id, name_fr: p.name_fr, name_ar: p.name_ar, price: p.price, desc_fr: p.desc_fr, desc_ar: p.desc_ar, image_url: p.image_url || null,
           sort_order: p.sort_order ?? nextSort, active: p.active,
           colors: p.colors.map((c) => ({ id: c.id, name_fr: c.name_fr, name_ar: c.name_ar, hex: c.hex, price: c.price })),
         },
@@ -361,8 +366,13 @@ function ProductEditor({ initial, nextSort, onClose, onSaved }) {
               <div className="ad-suffix"><input ref={priceRef} className={`ad-big ${bad === 'price' ? 'bad' : ''}`} type="number" step="any" min="0" inputMode="decimal" placeholder="Ex : 3500" value={p.price} onChange={(e) => { set('price', e.target.value); setBad('') }} /><span>DA</span></div>
             </div>
             <div className="ad-field">
-              <label>Description <small style={{ fontWeight: 400 }}>(optionnel — affichée telle quelle, en français ou en arabe)</small></label>
-              <textarea rows="3" placeholder="Quelques mots sur le produit" value={p.desc} onChange={(e) => set('desc', e.target.value)} />
+              <label>Description en français <small style={{ fontWeight: 400 }}>(optionnel)</small></label>
+              <textarea rows="3" placeholder="Quelques mots sur le produit" value={p.desc_fr} onChange={(e) => set('desc_fr', e.target.value)} />
+            </div>
+            <div className="ad-field">
+              <label>الوصف بالعربية <small style={{ fontWeight: 400 }}>(اختياري)</small></label>
+              <textarea rows="3" dir="rtl" lang="ar" placeholder="بضع كلمات عن المنتج" value={p.desc_ar} onChange={(e) => set('desc_ar', e.target.value)} />
+              <small style={{ color: 'var(--gray, #777)' }}>Les descriptions s'affichent exactement comme écrites, sans traduction. Si une seule langue est remplie, le site l'affiche dans les deux langues.</small>
             </div>
           </section>
           <section className="ad-card" style={{ display: 'grid', gap: 12 }}>
