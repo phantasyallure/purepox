@@ -1180,3 +1180,13 @@ html { scroll-padding-top: 90px; }
 .more-wrap { display: flex; justify-content: center; margin-top: 34px; }
 .more-btn { min-width: 240px; justify-content: center; }
 .more-n { opacity: .6; font-weight: 500; margin-inline-start: 4px; }
+
+/* receipt + solution thumbnails: small but the whole product is visible */
+.rc-line, .rc-group > .rc-line { grid-template-columns: 68px minmax(0, 1fr) auto auto; }
+.rc-img { width: 68px; height: 68px; border-radius: 14px; object-fit: contain; background: #fff; padding: 2px; box-shadow: 0 0 0 1px var(--gray-l); }
+.sol-thumb { width: 72px; height: 72px; object-fit: contain; background: #fff; padding: 2px; }
+@media (max-width: 560px) {
+  .rc-line, .rc-group > .rc-line { grid-template-columns: 60px minmax(0, 1fr) auto auto; gap: 8px; }
+  .rc-img { width: 60px; height: 60px; }
+  .sol-thumb { width: 64px; height: 64px; }
+}
