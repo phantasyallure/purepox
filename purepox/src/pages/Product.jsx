@@ -1,102 +1,122 @@
-import { json, bad, clean, num, group, purgePublic } from '../../_lib/util.js'
+import { useEffect, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
 
-const HEX = /^#[0-9a-fA-F]{6}$/
-const pickOf = (v, allowed, fallback) => (allowed.includes(v) ? v : fallback)
-const MAX_COLORS = 12
-
-export async function onRequestGet({ env }) {
-  const [p, c] = await Promise.all([
-    env.DB.prepare('SELECT * FROM products ORDER BY sort_order, created_at').all(),
-    env.DB.prepare('SELECT * FROM colors ORDER BY sort_order').all(),
-  ])
-  return json(group(p.results, c.results))
+// Pick a localized string from {fr, ar} or a plain string
+function pick(v, lang) {
+  if (!v) return ''
+  if (typeof v === 'string') return v
+  return v[lang] || v.fr || v.ar || ''
 }
 
-// Create or update a product together with its colors (atomic batch)
-export async function onRequestPost({ request, env }) {
-  let b
-  try { b = await request.json() } catch { return bad('invalid') }
+export default function Product({ settings }) {
+  const { id } = useParams()
+  const [product, setProduct] = useState(null)
+  const [status, setStatus] = useState('loading') // loading | ok | missing | error
+  const [colorIdx, setColorIdx] = useState(0)
 
-  // Names are typed by hand in French and in Arabic (no automatic translation). One of them is enough:
-  // the site shows the other one when a language is missing. The description is typed by hand too (French and Arabic fields), exactly as written: never translated.
-  const nameFr = clean(b.name_fr ?? b.name, 120)
-  const nameAr = clean(b.name_ar, 120)
-  const nameIn = nameFr || nameAr
-  const descFr = clean(b.desc_fr ?? b.desc, 2000)
-  const descAr = clean(b.desc_ar, 2000)
-  const bucket = num(b.bucket_kg) ?? 20            // not used any more by normal products (kept for old rows)
-  const cov = num(b.coverage_m2_per_kg) ?? 1
-  if (!nameIn || !(bucket > 0) || !(cov > 0)) return bad('invalid_product')
+  const lang = (typeof document !== 'undefined' && document.documentElement.lang) === 'ar' ? 'ar' : 'fr'
 
-  const colors = (Array.isArray(b.colors) ? b.colors : []).slice(0, MAX_COLORS).map((c, i) => ({
-    id: typeof c.id === 'string' && c.id ? c.id : crypto.randomUUID(),
-    name_fr: clean(c.name_fr, 80) || clean(c.hex, 9),
-    name_ar: clean(c.name_ar, 80) || clean(c.name_fr, 80) || clean(c.hex, 9),
-    hex: HEX.test(c.hex) ? c.hex : '#cccccc',
-    price: num(c.price),
-    price_wholesale: num(c.price_wholesale),
-    sort_order: i,
-  }))
-  if (colors.some((c) => !c.name_fr || (c.price !== null && c.price < 0) || (c.price_wholesale !== null && c.price_wholesale < 0))) return bad('invalid_color')
+  useEffect(() => {
+    let alive = true
+    setStatus('loading')
+    fetch('/api/public')
+      .then((r) => r.json())
+      .then((data) => {
+        if (!alive) return
+        const list = Array.isArray(data) ? data : data.products || data.items || []
+        const found = list.find((p) => String(p.id) === String(id))
+        if (found) {
+          setProduct(found)
+          setStatus('ok')
+        } else {
+          setStatus('missing')
+        }
+      })
+      .catch(() => alive && setStatus('error'))
+    return () => {
+      alive = false
+    }
+  }, [id])
 
-  // product price = the main price; a colour without its own price uses it
-  const prices = colors.map((c) => c.price).filter((x) => x !== null)
-  const base = num(b.price) ?? (prices.length ? Math.min(...prices) : num(b.base_price) ?? 0)
-  if (!(base > 0)) return bad('invalid_price')
-  const id = typeof b.id === 'string' && b.id ? b.id : crypto.randomUUID()
-  const img = typeof b.image_url === 'string' && (b.image_url.startsWith('/api/img/') || /^https?:\/\//.test(b.image_url)) ? b.image_url : null
-
-  const family = pickOf(b.family, ['epoxy', 'polyurethane'], 'epoxy')
-  const surface = pickOf(b.surface, ['concrete', 'smooth', 'both'], 'smooth')
-  const location = pickOf(b.location, ['interior', 'exterior', 'both'], 'interior')
-  const thickness = pickOf(b.thickness, ['lt1', 'gt1', 'both'], 'lt1')
-  const role = pickOf(b.role, ['finition', 'primer'], 'finition')
-
-  const db = env.DB
-
-  const name = { fr: nameFr || nameAr, ar: nameAr }
-  const desc = { fr: descFr, ar: descAr }
-
-  const stmts = [
-    db.prepare(
-      `INSERT INTO products (id,name_fr,name_ar,desc_fr,desc_ar,image_url,bucket_kg,coverage_m2_per_kg,family,surface,location,thickness,role,base_price,sort_order,active,created_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-       ON CONFLICT(id) DO UPDATE SET name_fr=excluded.name_fr, name_ar=excluded.name_ar, desc_fr=excluded.desc_fr, desc_ar=excluded.desc_ar,
-         image_url=excluded.image_url, bucket_kg=excluded.bucket_kg, coverage_m2_per_kg=excluded.coverage_m2_per_kg,
-         family=excluded.family, role=excluded.role, surface=excluded.surface, location=excluded.location, thickness=excluded.thickness,
-         base_price=excluded.base_price, sort_order=excluded.sort_order, active=excluded.active`
-    ).bind(
-      id, name.fr, name.ar, desc.fr, desc.ar, img,
-      bucket, cov, family, surface, location, thickness, role, base, Math.round(num(b.sort_order) ?? 0), b.active === false ? 0 : 1, new Date().toISOString()
-    ),
-  ]
-
-  // remove colors the admin deleted
-  if (colors.length) {
-    stmts.push(
-      db.prepare(`DELETE FROM colors WHERE product_id = ? AND id NOT IN (${colors.map(() => '?').join(',')})`)
-        .bind(id, ...colors.map((c) => c.id))
-    )
-  } else {
-    stmts.push(db.prepare('DELETE FROM colors WHERE product_id = ?').bind(id))
-  }
-  for (const c of colors) {
-    stmts.push(
-      db.prepare(
-        `INSERT INTO colors (id,product_id,name_fr,name_ar,hex,price,price_wholesale,active,sort_order) VALUES (?,?,?,?,?,?,?,1,?)
-         ON CONFLICT(id) DO UPDATE SET name_fr=excluded.name_fr, name_ar=excluded.name_ar, hex=excluded.hex,
-           price=excluded.price, price_wholesale=excluded.price_wholesale, sort_order=excluded.sort_order, active=1
-         WHERE colors.product_id = excluded.product_id`
-      ).bind(c.id, id, c.name_fr, c.name_ar, c.hex, c.price, c.price_wholesale, c.sort_order)
+  if (status === 'loading') return <div className="mt-splash" />
+  if (status !== 'ok') {
+    return (
+      <section style={{ padding: '60px 20px', textAlign: 'center' }}>
+        <p>{status === 'missing' ? 'Produit introuvable.' : 'Erreur de chargement.'}</p>
+        <Link to="/solution">← Retour</Link>
+      </section>
     )
   }
 
-  try {
-    await db.batch(stmts)
-  } catch (e) {
-    console.error(e)
-    return bad('server_error', 500)
-  }
-  await purgePublic(request)
-  return json({ ok: true, id })
+  const colors = Array.isArray(product.colors) ? product.colors : []
+  const color = colors[colorIdx]
+  const name = pick(product.name, lang)
+  const desc = pick(product.desc, lang)
+  const price = color?.price ?? product.price
+  const image = color?.image || product.image || product.image_url
+
+  const wa = String(settings?.whatsapp || '').replace(/\D/g, '')
+  const msg = encodeURIComponent(
+    `Bonjour, je veux commander : ${name}${color ? ' - ' + (color.name_fr || color.name || '') : ''}`
+  )
+
+  return (
+    <section style={{ maxWidth: 960, margin: '0 auto', padding: '30px 20px' }}>
+      <Link to="/solution">← Retour</Link>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 30, marginTop: 20 }}>
+        {image && (
+          <img
+            src={image}
+            alt={name}
+            style={{ flex: '1 1 320px', maxWidth: '100%', borderRadius: 12, objectFit: 'cover' }}
+          />
+        )}
+        <div style={{ flex: '1 1 320px' }}>
+          <h1>{name}</h1>
+          {desc && <p style={{ whiteSpace: 'pre-line' }}>{desc}</p>}
+
+          {colors.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '16px 0' }}>
+              {colors.map((c, i) => (
+                <button
+                  key={c.id ?? i}
+                  onClick={() => setColorIdx(i)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 8,
+                    border: i === colorIdx ? '2px solid currentColor' : '1px solid #888',
+                    background: c.hex || 'transparent',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {c.name_fr || c.name || `#${i + 1}`}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {price != null && <p style={{ fontSize: 24, fontWeight: 700 }}>{price} DA</p>}
+
+          {wa && (
+            <a
+              href={`https://wa.me/${wa}?text=${msg}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-block',
+                padding: '12px 22px',
+                borderRadius: 10,
+                background: '#25D366',
+                color: '#fff',
+                textDecoration: 'none',
+                fontWeight: 600,
+              }}
+            >
+              Commander sur WhatsApp
+            </a>
+          )}
+        </div>
+      </div>
+    </section>
+  )
 }
