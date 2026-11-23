@@ -14,3 +14,4 @@ export async function onRequestDelete({ env, params }) {
   await env.DB.prepare('DELETE FROM orders WHERE id = ?').bind(params.id).run()
   return json({ ok: true })
 }
+
